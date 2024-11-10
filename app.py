@@ -177,29 +177,20 @@ def index():
 
 @app.route('/load_songs')
 def load_songs():
-    print("Current working directory:", os.getcwd())  # Debug log
-    print("Files in directory:", os.listdir())  # Debug log
+    songs = []
     try:
-        print("Starting to load songs...")  # Debug log
-        
         with open('songs.csv', 'r', encoding='utf-8') as file:
-            print("File opened successfully")  # Debug log
             reader = csv.DictReader(file)
-            songs = list(reader)
-            print(f"Number of songs loaded: {len(songs)}")  # Debug log
-            
-            if len(songs) > 0:
-                print("Sample first song:", songs[0])  # Debug log
-            
-            return jsonify(songs)
-            
+            for row in reader:
+                url = row.get('URL', '').strip()
+                if url:  # Only process non-empty URLs
+                    media_info = get_media_type(url)
+                    row.update(media_info)
+                    songs.append(row)
     except Exception as e:
-        print(f"Error loading songs: {str(e)}")  # Detailed error logging
+        print(f"Error loading songs: {e}")
         return jsonify({"error": str(e)}), 500
+    return jsonify(songs)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True)
-
-    
-
-
