@@ -30,10 +30,10 @@
         }
 
         .main-container {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            overflow: hidden;
-        }
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr) 300px;
+        overflow: hidden;
+    }
 
         .sidebar {
             background-color: #000;
@@ -167,6 +167,8 @@
             background-color: var(--text-color);
         }
 
+        
+
         .player-container {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -193,6 +195,84 @@
             border-radius: 4px;
             margin-top: 16px;
         }
+
+        .lyrics-header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--secondary-bg);
+    }
+
+    .lyrics-title {
+        color: var(--text-color);
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .lyrics-subtitle {
+        color: var(--primary-color);
+        font-size: 14px;
+    }
+
+    .lyrics-content {
+        white-space: pre-line;
+        color: #b3b3b3;
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 16px 0;
+    }
+
+    .lyrics-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: #b3b3b3;
+        text-align: center;
+        gap: 12px;
+    }
+
+    .lyrics-loading {
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .lyrics-error {
+        color: #ff4444;
+        padding: 16px;
+        text-align: center;
+        background-color: rgba(255, 68, 68, 0.1);
+        border-radius: 4px;
+    }
+
+    
+    @media (max-width: 1200px) {
+        .main-container {
+            grid-template-columns: 300px 1fr;
+        }
+        
+        .lyrics-panel {
+            display: none;
+        }
+    }
+
+    /* Loading spinner animation */
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--primary-color);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
 
         @media (max-width: 768px) {
             .main-container {
@@ -221,6 +301,25 @@
             <div id="currentTrackInfo"></div>
             <div id="playerContainer" class="player-container"></div>
             <div id="errorMessage" class="error-message"></div>
+        </div>
+
+        <div class="lyrics-panel">
+            <div class="lyrics-header">
+                <div class="lyrics-title">Lyrics</div>
+                <div id="lyricsSongInfo" class="lyrics-subtitle"></div>
+            </div>
+            <div id="lyricsContainer" class="lyrics-content">
+                <div class="lyrics-placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 17H5a2 2 0 0 0-2 2 2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm12-2h-4a2 2 0 0 0-2 2 2 2 0 0 0 2 2h2a2 2 0 0 0 2-2z"/>
+                        <path d="M9 17h6"/>
+                        <path d="M9 5h6"/>
+                        <path d="M5 5h2a2 2 0 0 1 2 2v10"/>
+                        <path d="M17 5h2a2 2 0 0 1 2 2v10"/>
+                    </svg>
+                    <span>Select a song to view lyrics</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -264,196 +363,222 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            let currentPlayer = null;
-            let currentSongIndex = -1;
-            let songs = [];
-            let isPlaying = false;
+    let currentPlayer = null;
+    let currentSongIndex = -1;
+    let songs = [];
+    let isPlaying = false;
 
-            const playPauseIcon = {
-                play: '<polygon points="5 3 19 12 5 21 5 3"></polygon>',
-                pause: '<line x1="6" y1="4" x2="6" y2="20"></line><line x1="18" y1="4" x2="18" y2="20"></line>'
-            };
+    const playPauseIcon = {
+        play: '<polygon points="5 3 19 12 5 21 5 3"></polygon>',
+        pause: '<line x1="6" y1="4" x2="6" y2="20"></line><line x1="18" y1="4" x2="18" y2="20"></line>'
+    };
 
-            function updatePlayPauseIcon(playing) {
-                const icon = document.getElementById('playPauseIcon');
-                icon.innerHTML = playing ? playPauseIcon.pause : playPauseIcon.play;
+    function updatePlayPauseIcon(playing) {
+        const icon = document.getElementById('playPauseIcon');
+        icon.innerHTML = playing ? playPauseIcon.pause : playPauseIcon.play;
+    }
+
+    function updateNowPlaying(songData) {
+        document.getElementById('nowPlayingTitle').textContent = songData['Track name'] || 'Unknown Track';
+        document.getElementById('nowPlayingArtist').textContent = songData['Artist name'] || 'Unknown Artist';
+    }
+
+    // Listen for messages from iframe
+    window.addEventListener('message', function(e) {
+        // Listen for 'ended' event from YouTube iframe
+        if (e.origin === 'https://www.youtube.com') {
+            if (e.data === 'ended') {
+                playNext();
             }
+        }
+    });
 
-            function updateNowPlaying(songData) {
-                document.getElementById('nowPlayingTitle').textContent = songData['Track name'] || 'Unknown Track';
-                document.getElementById('nowPlayingArtist').textContent = songData['Artist name'] || 'Unknown Artist';
-            }
+    function createPlayer(mediaInfo, songData, index) {
+        currentSongIndex = index;
+        const playerContainer = document.getElementById('playerContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        playerContainer.innerHTML = '';
+        errorMessage.innerHTML = '';
+        
+        updateNowPlaying(songData);
 
-            function createPlayer(mediaInfo, songData, index) {
-                currentSongIndex = index;
-                const playerContainer = document.getElementById('playerContainer');
-                const errorMessage = document.getElementById('errorMessage');
-                
-                // Clear previous content
-                playerContainer.innerHTML = '';
-                errorMessage.innerHTML = '';
-                
-                // Update now playing info
-                updateNowPlaying(songData);
-
-                // Update active song in playlist
-                document.querySelectorAll('.song-item').forEach((item, idx) => {
-                    item.classList.toggle('active', idx === index);
-                });
-
-                isPlaying = true;
-                updatePlayPauseIcon(true);
-
-                switch(mediaInfo.type) {
-                    case 'youtube':
-                    case 'dailymotion':
-                    case 'vimeo':
-                        const iframe = document.createElement('iframe');
-                        iframe.src = mediaInfo.embed_url;
-                        iframe.frameBorder = '0';
-                        iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
-                        iframe.allowFullscreen = true;
-                        playerContainer.appendChild(iframe);
-                        currentPlayer = iframe;
-                        break;
-
-                    case 'soundcloud':
-                        const scIframe = document.createElement('iframe');
-                        scIframe.src = mediaInfo.embed_url;
-                        scIframe.frameBorder = '0';
-                        scIframe.allow = 'autoplay';
-                        playerContainer.appendChild(scIframe);
-                        currentPlayer = scIframe;
-                        break;
-
-                    case 'spotify':
-                        const spIframe = document.createElement('iframe');
-                        spIframe.src = mediaInfo.embed_url;
-                        spIframe.frameBorder = '0';
-                        spIframe.allow = 'encrypted-media';
-                        playerContainer.appendChild(spIframe);
-                        currentPlayer = spIframe;
-                        break;
-
-                    case 'audio':
-                        const audio = document.createElement('audio');
-                        audio.src = mediaInfo.url;
-                        audio.controls = true;
-                        audio.autoplay = true;
-                        playerContainer.appendChild(audio);
-                        currentPlayer = audio;
-                        
-                        audio.addEventListener('play', () => {
-                            isPlaying = true;
-                            updatePlayPauseIcon(true);
-                        });
-                        
-                        audio.addEventListener('pause', () => {
-                            isPlaying = false;
-                            updatePlayPauseIcon(false);
-                        });
-                        
-                        audio.addEventListener('ended', () => {
-                            playNext();
-                        });
-                        break;
-
-                    case 'video':
-                        const video = document.createElement('video');
-                        video.src = mediaInfo.url;
-                        video.controls = true;
-                        video.autoplay = true;
-                        playerContainer.appendChild(video);
-                        currentPlayer = video;
-                        
-                        video.addEventListener('play', () => {
-                            isPlaying = true;
-                            updatePlayPauseIcon(true);
-                        });
-                        
-                        video.addEventListener('pause', () => {
-                            isPlaying = false;
-                            updatePlayPauseIcon(false);
-                        });
-                        
-                        video.addEventListener('ended', () => {
-                            playNext();
-                        });
-                        break;
-
-                    case 'error':
-                    case 'unknown':
-                        errorMessage.textContent = mediaInfo.message || 'Unable to play this media';
-                        break;
-                }
-            }
-
-            function playPause() {
-                if (!currentPlayer) return;
-                
-                if (currentPlayer instanceof HTMLVideoElement || currentPlayer instanceof HTMLAudioElement) {
-                    if (currentPlayer.paused) {
-                        currentPlayer.play();
-                    } else {
-                        currentPlayer.pause();
-                    }
-                }
-            }
-
-            function playNext() {
-                if (currentSongIndex < songs.length - 1) {
-                    createPlayer(songs[currentSongIndex + 1], songs[currentSongIndex + 1], currentSongIndex + 1);
-                }
-            }
-
-            function playPrevious() {
-                if (currentSongIndex > 0) {
-                    createPlayer(songs[currentSongIndex - 1], songs[currentSongIndex - 1], currentSongIndex - 1);
-                }
-            }
-
-            function loadSongs() {
-                fetch('/load_songs')
-                    .then(response => response.json())
-                    .then(data => {
-                        songs = data;
-                        const songList = document.getElementById('songList');
-                        songList.innerHTML = '';
-
-                        songs.forEach((song, index) => {
-                            if (!song['Track name']) return; // Skip empty tracks
-
-                            const li = document.createElement('li');
-                            li.className = 'song-item';
-                            li.innerHTML = `
-                                
-                                <div class="song-info">
-                                    <div class="song-title">${song['Track name']}</div>
-                                    <div class="song-artist">${song['Artist name'] || 'Unknown Artist'}</div>
-                                </div>
-                            `;
-
-                            li.addEventListener('click', () => {
-                                createPlayer(song, song, index);
-                            });
-
-                            songList.appendChild(li);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error loading songs:', error);
-                        document.getElementById('errorMessage').textContent = 'Error loading songs';
-                    });
-            }
-
-            // Set up control button event listeners
-            document.getElementById('playPauseButton').addEventListener('click', playPause);
-            document.getElementById('nextButton').addEventListener('click', playNext);
-            document.getElementById('previousButton').addEventListener('click', playPrevious);
-
-            // Load initial songs
-            loadSongs();
+        document.querySelectorAll('.song-item').forEach((item, idx) => {
+            item.classList.toggle('active', idx === index);
         });
+
+        isPlaying = true;
+        updatePlayPauseIcon(true);
+
+        switch(mediaInfo.type) {
+            case 'youtube':
+                const iframe = document.createElement('iframe');
+                // Modify embed URL to disable controls and recommendations and enable event posting
+                const embedUrl = mediaInfo.embed_url + '&controls=1&rel=0&showinfo=0&modestbranding=1&iv_load_policy=3&enablejsapi=1';
+                iframe.src = embedUrl;
+                iframe.frameBorder = '0';
+                iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
+                iframe.allowFullscreen = true;
+
+                // Listen for the video to end (using postMessage API)
+                iframe.onload = function() {
+                    const script = `
+                        var player = document.querySelector('video');
+                        if (player) {
+                            player.addEventListener('ended', function() {
+                                window.parent.postMessage('ended', '*');
+                            });
+                        }
+                    `;
+                    try {
+                        iframe.contentWindow.eval(script);
+                    } catch(e) {
+                        console.log('Could not add video end detection');
+                    }
+                };
+
+                playerContainer.appendChild(iframe);
+                currentPlayer = iframe;
+                break;
+
+            case 'dailymotion':
+            case 'vimeo':
+                const otherIframe = document.createElement('iframe');
+                otherIframe.src = mediaInfo.embed_url + '&controls=0&rel=0';
+                otherIframe.frameBorder = '0';
+                otherIframe.allow = 'autoplay; encrypted-media; picture-in-picture';
+                otherIframe.allowFullscreen = true;
+                playerContainer.appendChild(otherIframe);
+                currentPlayer = otherIframe;
+                break;
+
+            case 'soundcloud':
+                const scIframe = document.createElement('iframe');
+                scIframe.src = mediaInfo.embed_url;
+                scIframe.frameBorder = '0';
+                scIframe.allow = 'autoplay';
+                playerContainer.appendChild(scIframe);
+                currentPlayer = scIframe;
+                break;
+
+            case 'spotify':
+                const spIframe = document.createElement('iframe');
+                spIframe.src = mediaInfo.embed_url;
+                spIframe.frameBorder = '0';
+                spIframe.allow = 'encrypted-media';
+                playerContainer.appendChild(spIframe);
+                currentPlayer = spIframe;
+                break;
+
+            case 'audio':
+                const audio = document.createElement('audio');
+                audio.src = mediaInfo.url;
+                audio.controls = true;
+                audio.autoplay = true;
+                playerContainer.appendChild(audio);
+                currentPlayer = audio;
+
+                audio.addEventListener('ended', () => {
+                    playNext();
+                });
+                break;
+
+            case 'video':
+                const video = document.createElement('video');
+                video.src = mediaInfo.url;
+                video.controls = true;
+                video.autoplay = true;
+                playerContainer.appendChild(video);
+                currentPlayer = video;
+
+                video.addEventListener('ended', () => {
+                    playNext();
+                });
+                break;
+
+            case 'error':
+            case 'unknown':
+                errorMessage.textContent = mediaInfo.message || 'Unable to play this media';
+                break;
+        }
+    }
+
+    // Handle play/pause
+    function playPause() {
+        if (!currentPlayer) return;
+
+        if (currentPlayer instanceof HTMLVideoElement || currentPlayer instanceof HTMLAudioElement) {
+            if (currentPlayer.paused) {
+                currentPlayer.play();
+            } else {
+                currentPlayer.pause();
+            }
+        }
+        // For YouTube videos, control the iframe directly
+        if (currentPlayer && currentPlayer.src.includes('youtube.com')) {
+            if (isPlaying) {
+                currentPlayer.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+            } else {
+                currentPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            }
+            isPlaying = !isPlaying;
+            updatePlayPauseIcon(isPlaying);
+        }
+    }
+
+    function playNext() {
+        if (currentSongIndex < songs.length - 1) {
+            createPlayer(songs[currentSongIndex + 1], songs[currentSongIndex + 1], currentSongIndex + 1);
+        }
+    }
+
+    function playPrevious() {
+        if (currentSongIndex > 0) {
+            createPlayer(songs[currentSongIndex - 1], songs[currentSongIndex - 1], currentSongIndex - 1);
+        }
+    }
+
+    function loadSongs() {
+        fetch('/load_songs')
+            .then(response => response.json())
+            .then(data => {
+                songs = data;
+                const songList = document.getElementById('songList');
+                songList.innerHTML = '';
+
+                songs.forEach((song, index) => {
+                    if (!song['Track name']) return;
+
+                    const li = document.createElement('li');
+                    li.className = 'song-item';
+                    li.innerHTML = `
+                        <div class="song-info">
+                            <div class="song-title">${song['Track name']}</div>
+                            <div class="song-artist">${song['Artist name'] || 'Unknown Artist'}</div>
+                        </div>
+                    `;
+
+                    li.addEventListener('click', () => {
+                        createPlayer(song, song, index);
+                    });
+
+                    songList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading songs:', error);
+                document.getElementById('errorMessage').textContent = 'Error loading songs';
+            });
+    }
+
+    document.getElementById('playPauseButton').addEventListener('click', playPause);
+    document.getElementById('nextButton').addEventListener('click', playNext);
+    document.getElementById('previousButton').addEventListener('click', playPrevious);
+
+    // Load initial songs
+    loadSongs();
+});
+
     </script>
 </body>
 </html>
