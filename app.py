@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, send_from_directory
 import csv
 from urllib.parse import urlparse, parse_qs, unquote
 import os
@@ -6,11 +6,70 @@ import requests
 import base64
 import re
 import validators
+from functools import lru_cache
+from werkzeug.middleware.proxy_fix import ProxyFix
+import logging
+from concurrent.futures import ThreadPoolExecutor
+import time
+from collections import OrderedDict
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class TimedCache:
+    def __init__(self, maxsize=100, ttl=3600):
+        self.maxsize = maxsize
+        self.ttl = ttl
+        self.cache = OrderedDict()
+        
+    def __call__(self, func):
+        def wrapped_func(*args, **kwargs):
+            key = str(args) + str(kwargs)
+            
+            # Clear expired entries
+            current_time = time.time()
+            # Collect expired keys in a separate list
+            expired_keys = [k for k, (_, timestamp) in list(self.cache.items()) 
+                         if current_time - timestamp > self.ttl]
+            # Remove each expired key without iterating over the OrderedDict directly
+            for k in expired_keys:
+                self.cache.pop(k, None)  # Use pop with default None to avoid KeyError
+
+            # Check cache
+            if key in self.cache:
+                value, timestamp = self.cache[key]
+                if current_time - timestamp <= self.ttl:
+                    return value
+                else:
+                    self.cache.pop(key)
+            
+            # Compute new value
+            result = func(*args, **kwargs)
+            
+            # Add to cache
+            self.cache[key] = (result, current_time)
+            
+            # Remove oldest if cache is full
+            if len(self.cache) > self.maxsize:
+                self.cache.popitem(last=False)
+                
+            return result
+        return wrapped_func
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app)
+
+# Create a thread pool for concurrent operations
+executor = ThreadPoolExecutor(max_workers=3)
+
+@TimedCache(maxsize=100, ttl=3600)
+def get_media_type_cached(url):
+    """Cached version of media type detection"""
+    return get_media_type(url)
 
 def decode_base64_url(url):
-    """Decode base64 encoded URLs"""
+    """Decode base64 encoded URLs with error handling"""
     try:
         match = re.search(r'link=([^&]+)', url)
         if match:
@@ -18,40 +77,43 @@ def decode_base64_url(url):
             decoded_url = unquote(encoded_part)
             actual_url = base64.b64decode(decoded_url).decode('utf-8')
             return actual_url
-    except:
+    except Exception as e:
+        logger.error(f"Error decoding base64 URL: {e}")
         return url
     return url
 
+@TimedCache(maxsize=50, ttl=1800)
 def get_first_youtube_video_url(search_url):
-    """Extract the first video URL from YouTube search results"""
+    """Cached YouTube search results"""
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
-        response = requests.get(search_url, headers=headers)
+        response = requests.get(search_url, headers=headers, timeout=5)
         video_id_pattern = r'watch\?v=([a-zA-Z0-9_-]+)'
         match = re.search(video_id_pattern, response.text)
         
         if match:
             video_id = match.group(1)
             return f'https://www.youtube.com/watch?v={video_id}'
-    except:
+    except Exception as e:
+        logger.error(f"Error fetching YouTube video: {e}")
         return None
     return None
 
 def extract_spotify_uri(url):
-    """Extract Spotify track/album/playlist ID from URL"""
+    """Extract Spotify URI with validation"""
     try:
         parsed = urlparse(url)
         path_parts = parsed.path.split('/')
-        if len(path_parts) >= 3:
+        if len(path_parts) >= 3 and all(part.strip() for part in path_parts[-2:]):
             return f"{path_parts[-2]}/{path_parts[-1]}"
-    except:
-        pass
+    except Exception as e:
+        logger.error(f"Error extracting Spotify URI: {e}")
     return None
 
 def get_media_type(url):
-    """Determine media type and get appropriate embed URL"""
+    """Determine media type with improved error handling and validation"""
     if not url or not validators.url(url):
         return {
             'type': 'error',
@@ -62,114 +124,117 @@ def get_media_type(url):
         parsed_url = urlparse(url)
         domain = parsed_url.netloc.lower()
         
-        # Handle YouTube
-        if 'youtube.com' in domain or 'youtu.be' in domain:
-            # Check if it's a search results page
-            if 'results' in parsed_url.path:
-                actual_video_url = get_first_youtube_video_url(url)
-                if actual_video_url:
-                    url = actual_video_url
-                    parsed_url = urlparse(url)
-                else:
-                    return {
-                        'type': 'error',
-                        'message': 'Could not find video in search results'
-                    }
-
-            video_id = None
-            if 'youtube.com' in domain:
-                video_id = parse_qs(parsed_url.query).get('v', [None])[0]
-            elif 'youtu.be' in domain:
-                video_id = parsed_url.path[1:]
-            
-            if video_id:
-                return {
-                    'type': 'youtube',
-                    'embed_url': f"https://www.youtube.com/embed/{video_id}?autoplay=1&enablejsapi=1",
-                    'video_id': video_id  # Adding video_id for API control
-                }
-        
-        # Handle Dailymotion
-        elif 'dailymotion.com' in domain:
-            video_id = parsed_url.path.split('/')[-1].split('_')[0]
-            return {
-                'type': 'dailymotion',
-                'embed_url': f"https://www.dailymotion.com/embed/video/{video_id}?autoplay=1&api=1",
-                'video_id': video_id
-            }
-            
-        # Handle SoundCloud
-        elif 'soundcloud.com' in domain:
-            return {
-                'type': 'soundcloud',
-                'embed_url': f"https://w.soundcloud.com/player/?url={url}&auto_play=true&color=%23ff5500&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true&api=1"
-            }
-        
-        # Handle Spotify
-        elif 'spotify.com' in domain:
-            spotify_uri = extract_spotify_uri(url)
-            if spotify_uri:
-                return {
-                    'type': 'spotify',
-                    'embed_url': f"https://open.spotify.com/embed/{spotify_uri}"
-                }
-        
-        # Handle Vimeo
-        elif 'vimeo.com' in domain:
-            video_id = parsed_url.path.split('/')[-1]
-            return {
-                'type': 'vimeo',
-                'embed_url': f"https://player.vimeo.com/video/{video_id}?autoplay=1&api=1",
-                'video_id': video_id
-            }
-
-        # Try to detect content type for direct media files
-        try:
-            headers = {
-                'User-Agent': 'Mozilla/5.0',
-                'Range': 'bytes=0-0'
-            }
-            response = requests.head(url, headers=headers, allow_redirects=True, timeout=5)
-            content_type = response.headers.get('content-type', '').lower()
-            
-            # Handle direct audio files
-            if 'audio' in content_type or any(ext in url.lower() for ext in ['.mp3', '.wav', '.ogg', '.m4a']):
-                return {
-                    'type': 'audio',
-                    'url': url
-                }
-            
-            # Handle direct video files
-            elif 'video' in content_type or any(ext in url.lower() for ext in ['.mp4', '.webm', '.mov']):
-                return {
-                    'type': 'video',
-                    'url': url
-                }
-                
-        except requests.exceptions.RequestException:
-            if any(ext in url.lower() for ext in ['.mp3', '.wav', '.ogg', '.m4a']):
-                return {
-                    'type': 'audio',
-                    'url': url
-                }
-            elif any(ext in url.lower() for ext in ['.mp4', '.webm', '.mov']):
-                return {
-                    'type': 'video',
-                    'url': url
-                }
-        
-        return {
-            'type': 'unknown',
-            'original_url': url,
-            'message': 'Unsupported media format or URL'
+        # Handle different media types
+        handlers = {
+            'youtube.com': handle_youtube,
+            'youtu.be': handle_youtube,
+            'dailymotion.com': handle_dailymotion,
+            'soundcloud.com': handle_soundcloud,
+            'spotify.com': handle_spotify,
+            'vimeo.com': handle_vimeo
         }
         
+        for domain_key, handler in handlers.items():
+            if domain_key in domain:
+                return handler(parsed_url, url)
+                
+        # Handle direct media files
+        return handle_direct_media(url)
+        
     except Exception as e:
+        logger.error(f"Error processing media type for URL {url}: {e}")
         return {
             'type': 'error',
             'original_url': url,
             'message': str(e)
         }
+
+def handle_youtube(parsed_url, url):
+    """Handle YouTube URLs"""
+    if 'results' in parsed_url.path:
+        actual_video_url = get_first_youtube_video_url(url)
+        if actual_video_url:
+            url = actual_video_url
+            parsed_url = urlparse(url)
+        else:
+            return {'type': 'error', 'message': 'Could not find video'}
+
+    video_id = None
+    if 'youtube.com' in parsed_url.netloc:
+        video_id = parse_qs(parsed_url.query).get('v', [None])[0]
+    elif 'youtu.be' in parsed_url.netloc:
+        video_id = parsed_url.path[1:]
+    
+    if video_id:
+        return {
+            'type': 'youtube',
+            'embed_url': f"https://www.youtube.com/embed/{video_id}?autoplay=1&enablejsapi=1",
+            'video_id': video_id
+        }
+    return {'type': 'error', 'message': 'Invalid YouTube URL'}
+
+def handle_dailymotion(parsed_url, url):
+    """Handle Dailymotion URLs"""
+    video_id = parsed_url.path.split('/')[-1].split('_')[0]
+    return {
+        'type': 'dailymotion',
+        'embed_url': f"https://www.dailymotion.com/embed/video/{video_id}?autoplay=1&api=1",
+        'video_id': video_id
+    }
+
+def handle_soundcloud(parsed_url, url):
+    """Handle SoundCloud URLs"""
+    return {
+        'type': 'soundcloud',
+        'embed_url': f"https://w.soundcloud.com/player/?url={url}&auto_play=true&color=%23ff5500&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true&api=1"
+    }
+
+def handle_spotify(parsed_url, url):
+    """Handle Spotify URLs"""
+    spotify_uri = extract_spotify_uri(url)
+    if spotify_uri:
+        return {
+            'type': 'spotify',
+            'embed_url': f"https://open.spotify.com/embed/{spotify_uri}"
+        }
+    return {'type': 'error', 'message': 'Invalid Spotify URL'}
+
+def handle_vimeo(parsed_url, url):
+    """Handle Vimeo URLs"""
+    video_id = parsed_url.path.split('/')[-1]
+    return {
+        'type': 'vimeo',
+        'embed_url': f"https://player.vimeo.com/video/{video_id}?autoplay=1&api=1",
+        'video_id': video_id
+    }
+
+def handle_direct_media(url):
+    """Handle direct media file URLs"""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0',
+            'Range': 'bytes=0-0'
+        }
+        response = requests.head(url, headers=headers, allow_redirects=True, timeout=5)
+        content_type = response.headers.get('content-type', '').lower()
+        
+        if 'audio' in content_type or any(ext in url.lower() for ext in ['.mp3', '.wav', '.ogg', '.m4a']):
+            return {'type': 'audio', 'url': url}
+        elif 'video' in content_type or any(ext in url.lower() for ext in ['.mp4', '.webm', '.mov']):
+            return {'type': 'video', 'url': url}
+            
+    except requests.exceptions.RequestException:
+        # Try to determine type from extension if request fails
+        if any(ext in url.lower() for ext in ['.mp3', '.wav', '.ogg', '.m4a']):
+            return {'type': 'audio', 'url': url}
+        elif any(ext in url.lower() for ext in ['.mp4', '.webm', '.mov']):
+            return {'type': 'video', 'url': url}
+    
+    return {
+        'type': 'unknown',
+        'original_url': url,
+        'message': 'Unsupported media format or URL'
+    }
 
 @app.route('/')
 def index():
@@ -179,18 +244,30 @@ def index():
 def load_songs():
     songs = []
     try:
+        # Use thread pool for concurrent processing
         with open('songs.csv', 'r', encoding='utf-8') as file:
             reader = csv.DictReader(file)
-            for row in reader:
-                url = row.get('URL', '').strip()
-                if url:  # Only process non-empty URLs
-                    media_info = get_media_type(url)
-                    row.update(media_info)
-                    songs.append(row)
+            rows = list(reader)
+            
+        def process_song(row):
+            url = row.get('URL', '').strip()
+            if url:
+                media_info = get_media_type_cached(url)
+                row.update(media_info)
+                return row
+            return None
+            
+        # Process songs concurrently
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            processed_songs = list(executor.map(process_song, rows))
+            songs = [song for song in processed_songs if song is not None]
+            
     except Exception as e:
-        print(f"Error loading songs: {e}")
+        logger.error(f"Error loading songs: {e}")
         return jsonify({"error": str(e)}), 500
+        
     return jsonify(songs)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True)
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
