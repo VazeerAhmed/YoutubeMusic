@@ -35,47 +35,76 @@
         overflow: hidden;
     }
 
-        .sidebar {
-            background-color: #000;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .logo {
-            color: var(--text-color);
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 30px;
-        }
+    .sidebar {
+    background: linear-gradient(to bottom, #333, #444);
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    margin: 15px;
+    height: calc(85vh - 30px); /* Account for margins */
+    overflow-y: auto;
+}
+.logo {
+    color: var(--primary-color);
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--secondary-bg);
+}
 
         .content {
             background: linear-gradient(to bottom, #404040, var(--bg-color));
             padding: 20px;
             overflow-y: auto;
         }
+/* Update song list styling */
+.song-list {
+    list-style: none;
+    margin-top: 15px;
+    padding-right: 10px; /* Add space for scrollbar */
+}
 
-        .song-list {
-            list-style: none;
-        }
+.song-item {
+    padding: 15px;
+    margin-bottom: 12px;
+    background-color: var(--secondary-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
 
-        .song-item {
-            padding: 12px;
-            margin: 4px 0;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+.song-item:hover {
+    background-color: var(--hover-bg);
+    transform: translateX(5px);
+}
 
-        .song-item:hover {
-            background-color: var(--hover-bg);
-        }
+.song-item.active {
+    background-color: var(--primary-color);
+    color: var(--bg-color);
+}
 
-        .song-item.active {
-            background-color: var(--secondary-bg);
-        }
+.song-item.active .song-artist {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+/* Scrollbar styling */
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--button-hover);
+}
 
         .song-art {
             width: 40px;
@@ -116,6 +145,7 @@
             grid-template-columns: 1fr 2fr 1fr;
             align-items: center;
             gap: 20px;
+            
         }
 
         .now-playing {
@@ -252,9 +282,8 @@
     
     @media (max-width: 1200px) {
         .main-container {
-            grid-template-columns: 300px 1fr;
-        }
-        
+        grid-template-columns: minmax(300px, 1fr) 1fr;
+    }
         .lyrics-panel {
             display: none;
         }
@@ -288,7 +317,143 @@
                 gap: 16px;
             }
         }
-    </style>
+
+        .right-side-container {
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Curved Weather Card */
+        #weather {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 20px;
+            background: linear-gradient(to bottom, #333, #444);
+            border-radius: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            color: #fff;
+            margin: 15px 0;
+        }
+
+        #weather h3 {
+            font-size: 1.5em;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        #weather p {
+            font-size: 1em;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        #weather-info, #snowfall-info, #rain-chance-info, #time-info, #date-info {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        #news {
+    padding: 20px;
+    background: linear-gradient(to bottom, #333, #444);
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    margin-top: 20px;
+    /* Make the entire container look like a card */
+}
+
+#news h3 {
+    font-size: 1.5em;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    display: inline-block; /* Fix the title position */
+}
+
+.refresh-btn {
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: var(--bg-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    display: inline-block; /* Fix the button position */
+}
+
+/* Hover effect for refresh button */
+.refresh-btn:hover {
+    background-color: var(--button-hover);
+}
+
+/* News container with scrolling */
+.news-container {
+    margin-top: 15px;
+    max-height: 300px;  /* Limit the height of the scrollable area */
+    overflow-y: auto;   /* Allow scrolling for the news items */
+}
+
+/* Individual news item styling */
+.news-item {
+    padding: 15px;
+    margin-bottom: 12px;
+    background-color: var(--secondary-bg);
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+/* Hover effect for individual news items */
+.news-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.news-item h4 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.news-item p {
+    font-size: 1em;
+    color: #bbb;
+}
+/*
+.volume-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;  Moves the container to the left 
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;  Aligns items (icon and slider) to the left 
+    gap: 8px;
+}
+
+
+        .volume-slider {
+            width: 100px;
+            height: 5px;
+            -webkit-appearance: none;
+            background: #404040;
+            border-radius: 2.5px;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .volume-icon {
+            width: 24px;
+            height: 24px;
+        }*/
+</style>
 </head>
 <body>
     <div class="main-container">
@@ -303,65 +468,172 @@
             <div id="errorMessage" class="error-message"></div>
         </div>
 
-        <div class="lyrics-panel">
-            <div class="lyrics-header">
-                <div class="lyrics-title">Lyrics</div>
-                <div id="lyricsSongInfo" class="lyrics-subtitle"></div>
+        <div class="right-side-container">
+            <!-- Weather container -->
+            <div id="weather" class="weather-container">
+                <h3>Weather</h3>
+                <p id="weather-info">Loading weather data...</p>
+                <p id="snowfall-info"></p>
+                <p id="rain-chance-info"></p>
+                <p id="time-info"></p>
+                <p id="date-info"></p>
             </div>
-            <div id="lyricsContainer" class="lyrics-content">
-                <div class="lyrics-placeholder">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 17H5a2 2 0 0 0-2 2 2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm12-2h-4a2 2 0 0 0-2 2 2 2 0 0 0 2 2h2a2 2 0 0 0 2-2z"/>
-                        <path d="M9 17h6"/>
-                        <path d="M9 5h6"/>
-                        <path d="M5 5h2a2 2 0 0 1 2 2v10"/>
-                        <path d="M17 5h2a2 2 0 0 1 2 2v10"/>
-                    </svg>
-                    <span>Select a song to view lyrics</span>
-                </div>
+
+            <div id="news">
+                <!-- Fixed title -->
+                <h3>Latest News</h3>
+                <!-- Fixed refresh button -->
+                <button id="refreshNews" class="refresh-btn" onclick="refreshNews()">Refresh News</button>
+            
+                <!-- Scrollable container for news items -->
+                <div id="newsInfo" class="news-container"></div>
             </div>
+            
         </div>
     </div>
 
     <div class="player-bar">
         <div class="now-playing">
             <div class="song-art">
-                
+                <img id="nowPlayingImage" src="https://img.youtube.com/vi/default.jpg" alt="Video Thumbnail" class="song-artwork">
             </div>
+            
             <div class="song-info">
                 <div class="song-title" id="nowPlayingTitle">Select a song</div>
                 <div class="song-artist" id="nowPlayingArtist"></div>
             </div>
         </div>
-
+        <div class="player-controls" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div id="progressBarContainer" style="width: 100%; height: 5px; background-color: #404040; position: relative;">
+                <div id="progressBar" style="width: 0%; height: 100%; background-color: var(--primary-color);"></div>
+            </div>
         <div class="player-controls">
             <div class="control-buttons">
                 <button class="control-button" id="previousButton" title="Previous">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 20L9 12l10-8v16z"></path>
                         <line x1="5" y1="19" x2="5" y2="5"></line>
                     </svg>
                 </button>
                 <button class="control-button play-pause" id="playPauseButton" title="Play/Pause">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="playPauseIcon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="black" stroke="currentColor" stroke-width="2" id="playPauseIcon">
                         <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
                 </button>
                 <button class="control-button" id="nextButton" title="Next">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 4l10 8-10 8V4z"></path>
                         <line x1="19" y1="5" x2="19" y2="19"></line>
                     </svg>
-                </button>
+                </button>        
             </div>
         </div>
-
+         
+        <!--
         <div class="volume-controls">
-            <!-- Volume controls could be added here -->
+            <img class="volume-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIj48cG9seWdvbiBwb2ludHM9IjExIDUgNiA5IDIgOSAyIDE1IDYgMTUgMTEgMTkgMTEgNSI+PC9wb2x5Z29uPjxwYXRoIGQ9Ik0xOS4wNyA0LjkzYTEwIDEwIDAgMCAxIDAgMTQuMTRNMTUuNTQgOC40NmE1IDUgMCAwIDEgMCA3LjA3Ij48L3BhdGg+PC9zdmc+" alt="Volume">
+            <input type="range" class="volume-slider" min="0" max="100" value="100">
         </div>
+        -->
     </div>
 
     <script>
+        // Helper function to get user's current location
+        function getLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    callback(lat, lon);
+                });
+            } else {
+                console.log("Geolocation is not supported by this browser.");
+            }
+        }
+
+        // Helper function to format time to 12-hour format
+        function formatTimeTo12Hour(time) {
+            const [hour, minute] = time.split(':');
+            const isPM = +hour >= 12;
+            const formattedHour = isPM ? hour - 12 || 12 : +hour || 12;
+            const period = isPM ? 'PM' : 'AM';
+            return `${formattedHour}:${minute} ${period}`;
+        }
+
+        // Fetch weather data using the Open Meteo API
+        function fetchWeather(lat, lon) {
+            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,snowfall_sum,precipitation_hours,sunrise,sunset&timezone=auto`;
+
+            fetch(weatherUrl)
+                .then((response) => response.json())
+                .then((data) => {
+                    const temp = data.daily.temperature_2m_max[0];
+                    const snowfall = data.daily.snowfall_sum[0] > 0 ? "Yes" : "No";
+                    const rainChance = data.daily.precipitation_hours[0] > 0 ? "100%" : "0%";
+                    const sunrise = formatTimeTo12Hour(data.daily.sunrise[0].slice(11, 16));
+                    const sunset = formatTimeTo12Hour(data.daily.sunset[0].slice(11, 16));
+                    const date = new Date().toLocaleDateString('en-GB');
+
+                    // Populating weather data
+                    document.getElementById('weather-info').innerText = `Temperature: ${temp}°C`;
+                    document.getElementById('snowfall-info').innerText = `Snowfall: ${snowfall}`;
+                    document.getElementById('rain-chance-info').innerText = `Chance of Rain: ${rainChance}`;
+                    document.getElementById('time-info').innerText = `Sunrise: ${sunrise}, Sunset: ${sunset}`;
+                    document.getElementById('date-info').innerText = `Date: ${date}`;
+                })
+                .catch((error) => {
+                    console.error('Error fetching weather data:', error);
+                    document.getElementById('weather').innerText = 'Failed to load weather data.';
+                });
+        }
+
+ 
+        // Fetch news articles using the News API
+        function fetchNews() {
+            const newsAPIKey = 'b4b41d797ab04b329ae41b7052e5db5c';
+            const newsAPIUrl = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${newsAPIKey}`;
+
+            fetch(newsAPIUrl)
+                .then((response) => response.json())
+                .then((data) => {
+                    const newsData = data.articles.slice(0, 5);  // Get top 5 news articles
+                    const newsInfo = document.getElementById('newsInfo');
+                    newsInfo.innerHTML = ''; // Clear previous news
+                    newsData.forEach((article) => {
+                        const newsElement = document.createElement('div');
+                        newsElement.classList.add('news-item');
+                        newsElement.innerHTML = `
+                            <h4><a href="${article.url}" target="_blank">${article.title}</a></h4>
+                            <p>${article.description}</p>
+                        `;
+                        newsInfo.appendChild(newsElement);
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error fetching news data:', error);
+                    document.getElementById('newsInfo').innerHTML = 'Failed to load news data.';
+                });
+        }
+
+        // Refresh news data
+        function refreshNews() {
+            fetchNews();
+        }
+
+        // Initialize the app
+        getLocation((lat, lon) => {
+            fetchWeather(lat, lon); // Fetch weather based on user's location
+        });
+
+        fetchNews(); // Fetch the latest news on page load
+        // Initialize the app
+        getLocation((lat, lon) => {
+            fetchWeather(lat, lon); // Fetch weather based on user's location
+        });
+
+        fetchNews(); // Fetch the latest news on page load
+
+        //music functions  
         document.addEventListener('DOMContentLoaded', function() {
     let currentPlayer = null;
     let currentSongIndex = -1;
@@ -377,11 +649,70 @@
         const icon = document.getElementById('playPauseIcon');
         icon.innerHTML = playing ? playPauseIcon.pause : playPauseIcon.play;
     }
-
+    
     function updateNowPlaying(songData) {
-        document.getElementById('nowPlayingTitle').textContent = songData['Track name'] || 'Unknown Track';
-        document.getElementById('nowPlayingArtist').textContent = songData['Artist name'] || 'Unknown Artist';
+    document.getElementById('nowPlayingTitle').textContent = songData['Track name'] || 'Unknown Track';
+    document.getElementById('nowPlayingArtist').textContent = songData['Artist name'] || 'Unknown Artist';
+    
+    // Update video thumbnail
+    const thumbnailImg = document.getElementById('nowPlayingImage');
+    if (songData.embed_url) {
+        // Extract video ID from embed URL
+        const videoId = getVideoIdFromUrl(songData.embed_url);
+        if (videoId) {
+            // Use high quality thumbnail
+            thumbnailImg.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        } else {
+            // Fallback to a music note icon or default image
+            thumbnailImg.src = 'https://via.placeholder.com/64x64?text=♪';
+        }
+    } else {
+        thumbnailImg.src = 'https://via.placeholder.com/64x64?text=♪';
     }
+}
+
+// Function to extract video ID from YouTube URL (you already have this)
+function getVideoIdFromUrl(url) {
+    const match = url.match(/(?:embed\/|v=|v\/|youtu\.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#\&\?\n<>\'\"]*)/);
+    return match && match[1];
+}
+
+    
+
+    function playNext() {
+    if (currentSongIndex < songs.length - 1) {
+        createPlayer(songs[currentSongIndex + 1], songs[currentSongIndex + 1], currentSongIndex + 1);
+    }
+    
+}
+
+let progressBarInterval;
+
+function startProgressBar(duration) {
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = '0%';
+
+    let elapsedTime = 0;
+    clearInterval(progressBarInterval);
+
+    progressBarInterval = setInterval(() => {
+        elapsedTime += 1;
+        const progress = (elapsedTime / duration) * 100;
+        progressBar.style.width = `${progress}%`;
+
+        if (elapsedTime >= duration) {
+            clearInterval(progressBarInterval);
+            playNext();
+        }
+    }, 1000); // Update every second
+}
+
+function stopProgressBar() {
+    clearInterval(progressBarInterval);
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = '0%';
+}
+
 
     // Listen for messages from iframe
     window.addEventListener('message', function(e) {
@@ -392,139 +723,159 @@
             }
         }
     });
-
+    
     function createPlayer(mediaInfo, songData, index) {
-        currentSongIndex = index;
-        const playerContainer = document.getElementById('playerContainer');
-        const errorMessage = document.getElementById('errorMessage');
-        
-        playerContainer.innerHTML = '';
-        errorMessage.innerHTML = '';
-        
-        updateNowPlaying(songData);
+    currentSongIndex = index;
+    const playerContainer = document.getElementById('playerContainer');
+    const errorMessage = document.getElementById('errorMessage');
 
-        document.querySelectorAll('.song-item').forEach((item, idx) => {
-            item.classList.toggle('active', idx === index);
-        });
+    playerContainer.innerHTML = '';
+    errorMessage.innerHTML = '';
 
-        isPlaying = true;
-        updatePlayPauseIcon(true);
+    updateNowPlaying(songData);
+    stopProgressBar();
 
-        switch(mediaInfo.type) {
-            case 'youtube':
-                const iframe = document.createElement('iframe');
-                // Modify embed URL to disable controls and recommendations and enable event posting
-                const embedUrl = mediaInfo.embed_url + '&controls=1&rel=0&showinfo=0&modestbranding=1&iv_load_policy=3&enablejsapi=1';
-                iframe.src = embedUrl;
-                iframe.frameBorder = '0';
-                iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
-                iframe.allowFullscreen = true;
+    document.querySelectorAll('.song-item').forEach((item, idx) => {
+        item.classList.toggle('active', idx === index);
+    });
 
-                // Listen for the video to end (using postMessage API)
-                iframe.onload = function() {
-                    const script = `
-                        var player = document.querySelector('video');
-                        if (player) {
-                            player.addEventListener('ended', function() {
-                                window.parent.postMessage('ended', '*');
-                            });
-                        }
-                    `;
-                    try {
-                        iframe.contentWindow.eval(script);
-                    } catch(e) {
-                        console.log('Could not add video end detection');
+    isPlaying = true;
+    updatePlayPauseIcon(true);
+
+    
+
+    switch (mediaInfo.type) {
+        case 'youtube':
+            const iframe = document.createElement('iframe');
+            const embedUrl = `${mediaInfo.embed_url}&autoplay=1&controls=1&rel=0&showinfo=0&modestbranding=1`;
+            iframe.src = embedUrl;
+            iframe.frameBorder = '0';
+            iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
+            iframe.allowFullscreen = true;
+
+            // Get video ID from embed URL
+            const videoId = getVideoIdFromUrl(mediaInfo.embed_url);
+            
+            // Fetch video duration
+            fetchVideoDuration(videoId)
+                .then(duration => {
+                    if (duration) {
+                        startProgressBar(duration);
+                    } else {
+                        console.error('Could not get video duration');
+                        startProgressBar(180); // Fallback to 3 minutes
                     }
-                };
-
-                playerContainer.appendChild(iframe);
-                currentPlayer = iframe;
-                break;
-
-            case 'dailymotion':
-            case 'vimeo':
-                const otherIframe = document.createElement('iframe');
-                otherIframe.src = mediaInfo.embed_url + '&controls=0&rel=0';
-                otherIframe.frameBorder = '0';
-                otherIframe.allow = 'autoplay; encrypted-media; picture-in-picture';
-                otherIframe.allowFullscreen = true;
-                playerContainer.appendChild(otherIframe);
-                currentPlayer = otherIframe;
-                break;
-
-            case 'soundcloud':
-                const scIframe = document.createElement('iframe');
-                scIframe.src = mediaInfo.embed_url;
-                scIframe.frameBorder = '0';
-                scIframe.allow = 'autoplay';
-                playerContainer.appendChild(scIframe);
-                currentPlayer = scIframe;
-                break;
-
-            case 'spotify':
-                const spIframe = document.createElement('iframe');
-                spIframe.src = mediaInfo.embed_url;
-                spIframe.frameBorder = '0';
-                spIframe.allow = 'encrypted-media';
-                playerContainer.appendChild(spIframe);
-                currentPlayer = spIframe;
-                break;
-
-            case 'audio':
-                const audio = document.createElement('audio');
-                audio.src = mediaInfo.url;
-                audio.controls = true;
-                audio.autoplay = true;
-                playerContainer.appendChild(audio);
-                currentPlayer = audio;
-
-                audio.addEventListener('ended', () => {
-                    playNext();
+                })
+                .catch(error => {
+                    console.error('Error fetching duration:', error);
+                    startProgressBar(180); // Fallback to 3 minutes
                 });
-                break;
 
-            case 'video':
-                const video = document.createElement('video');
-                video.src = mediaInfo.url;
-                video.controls = true;
-                video.autoplay = true;
-                playerContainer.appendChild(video);
-                currentPlayer = video;
+            playerContainer.appendChild(iframe);
+            currentPlayer = iframe;
+            break;
 
-                video.addEventListener('ended', () => {
-                    playNext();
-                });
-                break;
 
-            case 'error':
-            case 'unknown':
-                errorMessage.textContent = mediaInfo.message || 'Unable to play this media';
-                break;
+        // ... rest of the switch cases remain the same ...
+    }
+    
+}
+
+function getVideoIdFromUrl(url) {
+    // Extract video ID from YouTube URL
+    const match = url.match(/(?:embed\/|v=|v\/|youtu\.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#\&\?\n<>\'\"]*)/);
+    return match && match[1];
+}
+
+
+async function fetchVideoDuration(videoId) {
+    try {
+        // Make a request to your backend endpoint that handles YouTube scraping
+        const response = await fetch(`/get_video_duration/${videoId}`);
+        const data = await response.json();
+        
+        if (data.duration) {
+            // Convert duration to seconds if it's in a different format
+            return convertToSeconds(data.duration);
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching video duration:', error);
+        return null;
+    }
+}
+
+function convertToSeconds(duration) {
+    // Handle different duration formats
+    if (typeof duration === 'number') {
+        return duration;
+    }
+
+    // Handle MM:SS format
+    if (duration.includes(':')) {
+        const parts = duration.split(':');
+        if (parts.length === 2) {
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+        // Handle HH:MM:SS format
+        if (parts.length === 3) {
+            return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
         }
     }
+    
+    return null;
+}
+
+function startProgressBar(duration) {
+    const progressBar = document.getElementById('progressBar');
+    let progress = 0;
+    clearInterval(progressBarInterval);
+
+    // Store the start time
+    const startTime = Date.now();
+
+    progressBarInterval = setInterval(() => {
+        // Calculate elapsed time in seconds
+        const elapsedSeconds = (Date.now() - startTime) / 1000;
+        progress = (elapsedSeconds / duration) * 100;
+        
+        if (progress >= 100) {
+            clearInterval(progressBarInterval);
+            stopProgressBar();
+            playNext();
+            return;
+        }
+
+        progressBar.style.width = `${progress}%`;
+    }, 100); // Update more frequently for smoother progress
+}
+
 
     // Handle play/pause
-    function playPause() {
-        if (!currentPlayer) return;
+function playPause() {
+    if (!currentPlayer) return;
 
-        if (currentPlayer instanceof HTMLVideoElement || currentPlayer instanceof HTMLAudioElement) {
-            if (currentPlayer.paused) {
-                currentPlayer.play();
-            } else {
-                currentPlayer.pause();
-            }
-        }
-        // For YouTube videos, control the iframe directly
-        if (currentPlayer && currentPlayer.src.includes('youtube.com')) {
-            if (isPlaying) {
-                currentPlayer.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-            } else {
-                currentPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-            }
-            isPlaying = !isPlaying;
-            updatePlayPauseIcon(isPlaying);
+    if (currentPlayer instanceof HTMLVideoElement || currentPlayer instanceof HTMLAudioElement) {
+        if (currentPlayer.paused) {
+            currentPlayer.play();
+            startProgressBar(currentPlayer.duration - currentPlayer.currentTime);
+        } else {
+            currentPlayer.pause();
+            stopProgressBar();
         }
     }
+
+    if (currentPlayer.src.includes('youtube.com')) {
+        if (isPlaying) {
+            currentPlayer.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+            stopProgressBar();
+        } else {
+            currentPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            startProgressBar();
+        }
+        isPlaying = !isPlaying;
+    }
+}
 
     function playNext() {
         if (currentSongIndex < songs.length - 1) {
