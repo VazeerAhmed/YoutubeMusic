@@ -295,12 +295,15 @@
     }
 
     .loading-spinner {
+        display: inline-block;
         width: 20px;
         height: 20px;
         border: 2px solid var(--primary-color);
         border-top-color: transparent;
         border-radius: 50%;
         animation: spin 1s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
     }
 
         @media (max-width: 768px) {
@@ -397,31 +400,79 @@
     overflow-y: auto;   /* Allow scrolling for the news items */
 }
 
-/* Individual news item styling */
 .news-item {
     padding: 15px;
     margin-bottom: 12px;
     background-color: var(--secondary-bg);
     border-radius: 8px;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
+    border-left: 3px solid var(--primary-color);
 }
 
-/* Hover effect for individual news items */
 .news-item:hover {
+    transform: translateX(5px);
     background-color: var(--hover-bg);
 }
-
 .news-item h4 {
-    font-size: 1.2em;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    line-height: 1.4;
 }
 
 .news-item p {
     font-size: 1em;
     color: #bbb;
 }
-/*
-.volume-controls {
+
+.news-item a {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.news-item a:hover {
+    color: var(--primary-color);
+}
+
+.news-date {
+    margin-bottom: 8px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.news-source {
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: var(--primary-color);
+}
+
+/* Disabled button state */
+.refresh-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: var(--secondary-bg);
+}
+
+/* Category selector styling */
+.category-select {
+    padding: 8px;
+    border-radius: 4px;
+    background: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--primary-color);
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.category-select:hover {
+    border-color: var(--button-hover);
+}
+
+.category-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.3);
+}
+
+/*.volume-controls {
     position: absolute;
     bottom: 20px;
     right: 20px;  Moves the container to the left 
@@ -538,101 +589,259 @@
     </div>
 
     <script>
-        // Helper function to get user's current location
-        function getLocation(callback) {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    callback(lat, lon);
+        // Helper function to get user's current location with better error handling
+function getLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error("Geolocation is not supported by this browser."));
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                resolve({
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude
                 });
-            } else {
-                console.log("Geolocation is not supported by this browser.");
+            },
+            (error) => {
+                reject(new Error(`Failed to get location: ${error.message}`));
+            },
+            {
+                timeout: 10000,
+                maximumAge: 0,
+                enableHighAccuracy: true
             }
+        );
+    });
+}
+
+// Updated weather fetching function with better error handling
+async function fetchWeather() {
+    const weatherContainer = document.getElementById('weather');
+    
+    try {
+        // Show loading state
+        weatherContainer.innerHTML = `
+            <h3>Weather</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="loading-spinner"></div>
+                <p>Loading weather data...</p>
+            </div>
+        `;
+
+        // Get location
+        const { lat, lon } = await getLocation();
+        
+        // Fetch weather data with CORS proxy
+        const weatherUrl = `https://cors-anywhere.herokuapp.com/https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,snowfall_sum,precipitation_probability_max&timezone=auto&forecast_days=1`;
+        
+        const response = await fetch(weatherUrl, {
+            headers: {
+                'Origin': window.location.origin
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Weather API responded with status: ${response.status}`);
         }
 
-        // Helper function to format time to 12-hour format
-        function formatTimeTo12Hour(time) {
-            const [hour, minute] = time.split(':');
-            const isPM = +hour >= 12;
-            const formattedHour = isPM ? hour - 12 || 12 : +hour || 12;
-            const period = isPM ? 'PM' : 'AM';
-            return `${formattedHour}:${minute} ${period}`;
-        }
+        const data = await response.json();
 
-        // Fetch weather data using the Open Meteo API
-        function fetchWeather(lat, lon) {
-            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,snowfall_sum,precipitation_hours,sunrise,sunset&timezone=auto`;
+        // Format the data
+        const temp = Math.round(data.daily.temperature_2m_max[0]);
+        const snowfall = data.daily.snowfall_sum[0] > 0 ? "Yes" : "No";
+        const rainChance = `${data.daily.precipitation_probability_max[0]}%`;
+        const date = new Date().toLocaleDateString('en-GB');
 
-            fetch(weatherUrl)
-                .then((response) => response.json())
-                .then((data) => {
-                    const temp = data.daily.temperature_2m_max[0];
-                    const snowfall = data.daily.snowfall_sum[0] > 0 ? "Yes" : "No";
-                    const rainChance = data.daily.precipitation_hours[0] > 0 ? "100%" : "0%";
-                    const sunrise = formatTimeTo12Hour(data.daily.sunrise[0].slice(11, 16));
-                    const sunset = formatTimeTo12Hour(data.daily.sunset[0].slice(11, 16));
-                    const date = new Date().toLocaleDateString('en-GB');
+        // Update the weather container
+        weatherContainer.innerHTML = `
+            <h3>Weather</h3>
+            <p id="weather-info">Temperature: ${temp}°C</p>
+            <p id="snowfall-info">Snowfall: ${snowfall}</p>
+            <p id="rain-chance-info">Chance of Rain: ${rainChance}</p>
+            <p id="date-info">Date: ${date}</p>
+        `;
 
-                    // Populating weather data
-                    document.getElementById('weather-info').innerText = `Temperature: ${temp}°C`;
-                    document.getElementById('snowfall-info').innerText = `Snowfall: ${snowfall}`;
-                    document.getElementById('rain-chance-info').innerText = `Chance of Rain: ${rainChance}`;
-                    document.getElementById('time-info').innerText = `Sunrise: ${sunrise}, Sunset: ${sunset}`;
-                    document.getElementById('date-info').innerText = `Date: ${date}`;
-                })
-                .catch((error) => {
-                    console.error('Error fetching weather data:', error);
-                    document.getElementById('weather').innerText = 'Failed to load weather data.';
+    } catch (error) {
+        console.error('Weather error:', error);
+        weatherContainer.innerHTML = `
+            <h3>Weather</h3>
+            <p style="color: #ff4444;">
+                Unable to load weather data. ${error.message}
+                <button onclick="fetchWeather()" 
+                        style="background: var(--primary-color); 
+                               color: white; 
+                               border: none; 
+                               padding: 5px 10px; 
+                               border-radius: 4px; 
+                               margin-left: 10px;">
+                    Retry
+                </button>
+            </p>
+        `;
+    }
+}
+
+// Initialize weather on page load
+document.addEventListener('DOMContentLoaded', fetchWeather);
+       // Constants for the news API
+const BASE_URL = "https://saurav.tech/NewsAPI";
+const CATEGORIES = ["general", "business", "technology", "sports", "entertainment", "health", "science"];
+
+// Enhanced news fetching function
+function fetchNews() {
+    const category = "general"; // You can make this dynamic later
+    const countryCode = "us";   // You can make this dynamic later
+    const newsUrl = `${BASE_URL}/top-headlines/category/${category}/${countryCode}.json`;
+
+    // Show loading state
+    const newsInfo = document.getElementById('newsInfo');
+    newsInfo.innerHTML = `
+        <div class="news-item">
+            <div class="loading-spinner"></div>
+            <p>Loading latest news...</p>
+        </div>
+    `;
+
+    fetch(newsUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            newsInfo.innerHTML = ''; // Clear loading message
+            
+            if (!data.articles || data.articles.length === 0) {
+                throw new Error('No articles found');
+            }
+
+            // Display only the first 5 articles
+            data.articles.slice(0, 5).forEach(article => {
+                const newsElement = document.createElement('div');
+                newsElement.classList.add('news-item');
+                
+                // Format the publication date
+                const publishedDate = new Date(article.publishedAt);
+                const formattedDate = publishedDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
                 });
-        }
 
+                newsElement.innerHTML = `
+                    <h4>
+                        <a href="${article.url}" target="_blank" rel="noopener noreferrer">
+                            ${article.title}
+                        </a>
+                    </h4>
+                    <p class="news-date" style="font-size: 0.8em; color: #666;">
+                        ${formattedDate}
+                    </p>
+                    <p>${article.description || 'No description available'}</p>
+                    <p class="news-source" style="font-size: 0.9em; color: var(--primary-color);">
+                        Source: ${article.source.name}
+                    </p>
+                `;
+                newsInfo.appendChild(newsElement);
+            });
+
+            // Update the last refresh time
+            const newsHeader = document.querySelector('#news h3');
+            const timeString = new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            newsHeader.innerHTML = `Latest News <span style="font-size: 0.8em; color: #666;">(Updated at ${timeString})</span>`;
+        })
+        .catch(error => {
+            console.error('Error fetching news:', error);
+            newsInfo.innerHTML = `
+                <div class="news-item" style="color: #ff4444; background-color: rgba(255, 68, 68, 0.1);">
+                    <h4>Error Loading News</h4>
+                    <p>Unable to load news at this time. Please try again later.</p>
+                    <p style="font-size: 0.8em;">Error: ${error.message}</p>
+                </div>
+            `;
+        });
+}
+
+// Enhanced refresh function with debouncing
+let refreshTimeout;
+function refreshNews() {
+    const refreshButton = document.getElementById('refreshNews');
+    
+    // Prevent rapid refreshing
+    if (refreshButton.disabled) {
+        return;
+    }
+
+    // Update button state
+    refreshButton.disabled = true;
+    refreshButton.innerHTML = `
+        <span class="loading-spinner"></span>
+        Refreshing...
+    `;
+
+    clearTimeout(refreshTimeout);
+    
+    fetchNews();
+    
+    // Re-enable button after 10 seconds to prevent spam
+    refreshTimeout = setTimeout(() => {
+        refreshButton.disabled = false;
+        refreshButton.textContent = 'Refresh News';
+    }, 10000);
+}
+
+// Optional: Add category selection functionality
+function createCategorySelector() {
+    const newsContainer = document.getElementById('news');
+    const selectorContainer = document.createElement('div');
+    selectorContainer.style.marginBottom = '15px';
+    
+    const select = document.createElement('select');
+    select.className = 'category-select';
+    select.style.cssText = `
+        padding: 8px;
+        border-radius: 4px;
+        background: var(--secondary-bg);
+        color: var(--text-color);
+        border: 1px solid var(--primary-color);
+        margin-right: 10px;
+    `;
+
+    CATEGORIES.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+        select.appendChild(option);
+    });
+
+    select.addEventListener('change', (e) => {
+        fetchNewsForCategory(e.target.value);
+    });
+
+    selectorContainer.appendChild(select);
+    newsContainer.insertBefore(selectorContainer, newsContainer.firstChild);
+}
+
+// Fetch news for a specific category
+function fetchNewsForCategory(category) {
+    const countryCode = "us";
+    const newsUrl = `${BASE_URL}/top-headlines/category/${category}/${countryCode}.json`;
+    // ... rest of the fetch logic remains the same ...
+}
+
+// Initialize the news section
+document.addEventListener('DOMContentLoaded', () => {
+    fetchNews();
+    // Uncomment the line below if you want to add category selection
+    // createCategorySelector();
+}); 
  
-        // Fetch news articles using the News API
-        function fetchNews() {
-            const newsAPIKey = 'b4b41d797ab04b329ae41b7052e5db5c';
-            const newsAPIUrl = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${newsAPIKey}`;
-
-            fetch(newsAPIUrl)
-                .then((response) => response.json())
-                .then((data) => {
-                    const newsData = data.articles.slice(0, 5);  // Get top 5 news articles
-                    const newsInfo = document.getElementById('newsInfo');
-                    newsInfo.innerHTML = ''; // Clear previous news
-                    newsData.forEach((article) => {
-                        const newsElement = document.createElement('div');
-                        newsElement.classList.add('news-item');
-                        newsElement.innerHTML = `
-                            <h4><a href="${article.url}" target="_blank">${article.title}</a></h4>
-                            <p>${article.description}</p>
-                        `;
-                        newsInfo.appendChild(newsElement);
-                    });
-                })
-                .catch((error) => {
-                    console.error('Error fetching news data:', error);
-                    document.getElementById('newsInfo').innerHTML = 'Failed to load news data.';
-                });
-        }
-
-        // Refresh news data
-        function refreshNews() {
-            fetchNews();
-        }
-
-        // Initialize the app
-        getLocation((lat, lon) => {
-            fetchWeather(lat, lon); // Fetch weather based on user's location
-        });
-
-        fetchNews(); // Fetch the latest news on page load
-        // Initialize the app
-        getLocation((lat, lon) => {
-            fetchWeather(lat, lon); // Fetch weather based on user's location
-        });
-
-        fetchNews(); // Fetch the latest news on page load
-
         //music functions  
         document.addEventListener('DOMContentLoaded', function() {
     let currentPlayer = null;
