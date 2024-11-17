@@ -268,6 +268,46 @@ def load_songs():
         
     return jsonify(songs)
 
+# calling api from html file
+
+# Add these constants at the top of your app.py
+WEATHER_API_KEY = "1cc79e5a9915e18d74c8a0aa0002020a"
+NEWS_API_KEY = "b4b41d797ab04b329ae41b7052e5db5c"
+
+# Weather endpoint
+@app.route('/api/weather', methods=['GET'])
+def get_weather():
+    lat = request.args.get('lat', default=None, type=float)
+    lon = request.args.get('lon', default=None, type=float)
+
+    if not lat or not lon:
+        return jsonify({"error": "Latitude and longitude are required"}), 400
+
+    weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={WEATHER_API_KEY}&units=metric"
+    try:
+        response = requests.get(weather_url, timeout=5)
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching weather data: {e}")
+        return jsonify({"error": "Failed to fetch weather data"}), 500
+
+# News endpoint
+@app.route('/api/news', methods=['GET'])
+def get_news():
+    country = request.args.get('country', default='us', type=str)
+
+    news_url = f"https://newsapi.org/v2/top-headlines?apiKey={NEWS_API_KEY}&country={country}"
+    try:
+        response = requests.get(news_url, timeout=5)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching news data: {e}")
+        return jsonify({"error": "Failed to fetch news data"}), 500
+
+
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
