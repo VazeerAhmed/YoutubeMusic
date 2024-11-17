@@ -605,7 +605,21 @@ function getLocation() {
                 });
             },
             (error) => {
-                reject(new Error(`Failed to get location: ${error.message}`));
+                let errorMessage;
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = "Please enable location access in your browser settings.";
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = "Location information is unavailable.";
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = "Location request timed out.";
+                        break;
+                    default:
+                        errorMessage = "An unknown error occurred.";
+                }
+                reject(new Error(errorMessage));
             },
             {
                 timeout: 10000,
@@ -616,7 +630,7 @@ function getLocation() {
     });
 }
 
-// Updated weather fetching function with better error handling
+// Updated weather fetching function with direct API call and better error handling
 async function fetchWeather() {
     const weatherContainer = document.getElementById('weather');
     
@@ -633,12 +647,14 @@ async function fetchWeather() {
         // Get location
         const { lat, lon } = await getLocation();
         
-        // Fetch weather data with CORS proxy
-        const weatherUrl = `https://cors-anywhere.herokuapp.com/https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,snowfall_sum,precipitation_probability_max&timezone=auto&forecast_days=1`;
+        // Construct the weather API URL correctly
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,snowfall_sum,precipitation_hours,sunrise,sunset&timezone=auto`;
         
+        // Add error handling for the fetch request
         const response = await fetch(weatherUrl, {
+            method: 'GET',
             headers: {
-                'Origin': window.location.origin
+                'Accept': 'application/json'
             }
         });
 
@@ -648,10 +664,17 @@ async function fetchWeather() {
 
         const data = await response.json();
 
+        // Validate the data
+        if (!data.daily) {
+            throw new Error('Invalid weather data received');
+        }
+
         // Format the data
         const temp = Math.round(data.daily.temperature_2m_max[0]);
         const snowfall = data.daily.snowfall_sum[0] > 0 ? "Yes" : "No";
-        const rainChance = `${data.daily.precipitation_probability_max[0]}%`;
+        const rainChance = data.daily.precipitation_hours[0] > 0 ? "100%" : "0%";
+        const sunrise = formatTimeTo12Hour(data.daily.sunrise[0].slice(11, 16));
+        const sunset = formatTimeTo12Hour(data.daily.sunset[0].slice(11, 16));
         const date = new Date().toLocaleDateString('en-GB');
 
         // Update the weather container
@@ -660,6 +683,8 @@ async function fetchWeather() {
             <p id="weather-info">Temperature: ${temp}°C</p>
             <p id="snowfall-info">Snowfall: ${snowfall}</p>
             <p id="rain-chance-info">Chance of Rain: ${rainChance}</p>
+            <p id="time-info">Sunrise: ${sunrise}</p>
+            <p id="time-info">Sunset: ${sunset}</p>
             <p id="date-info">Date: ${date}</p>
         `;
 
@@ -668,7 +693,7 @@ async function fetchWeather() {
         weatherContainer.innerHTML = `
             <h3>Weather</h3>
             <p style="color: #ff4444;">
-                Unable to load weather data. ${error.message}
+                ${error.message}
                 <button onclick="fetchWeather()" 
                         style="background: var(--primary-color); 
                                color: white; 
@@ -683,8 +708,30 @@ async function fetchWeather() {
     }
 }
 
+// Helper function to format time to 12-hour format
+function formatTimeTo12Hour(time) {
+    const [hour, minute] = time.split(':');
+    const isPM = +hour >= 12;
+    const formattedHour = isPM ? hour - 12 || 12 : +hour || 12;
+    const period = isPM ? 'PM' : 'AM';
+    return `${formattedHour}:${minute} ${period}`;
+}
+
+// Add auto-retry functionality
+let weatherRetryCount = 0;
+const MAX_RETRIES = 3;
+
+function initializeWeather() {
+    fetchWeather().catch(error => {
+        if (weatherRetryCount < MAX_RETRIES) {
+            weatherRetryCount++;
+            setTimeout(initializeWeather, 2000 * weatherRetryCount); // Exponential backoff
+        }
+    });
+}
+
 // Initialize weather on page load
-document.addEventListener('DOMContentLoaded', fetchWeather);
+document.addEventListener('DOMContentLoaded', initializeWeather);
        // Constants for the news API
 const BASE_URL = "https://saurav.tech/NewsAPI";
 const CATEGORIES = ["general", "business", "technology", "sports", "entertainment", "health", "science"];
