@@ -24,132 +24,148 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
+            height: 100vh;
+            display: grid;
+            grid-template-rows: 1fr auto;
         }
 
         .main-container {
-            display: flex;
-            flex: 1;
-            flex-direction: row;
-            height: calc(100vh - 90px); /* Account for player bar */
-            overflow: hidden;
-        }
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr) 300px;
+        overflow: hidden;
+    }
 
-        @media (max-width: 768px) {
-            .main-container {
-                flex-direction: column;
-                height: auto;
-                min-height: calc(100vh - 160px); /* Adjusted for larger player bar on mobile */
-            }
-        }
-
-        .sidebar {
-            flex: 0 0 300px;
-            background: linear-gradient(to bottom, #333, #444);
-            border-radius: 15px;
-            margin: 15px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                flex: none;
-                width: auto;
-                max-height: 300px;
-                margin: 10px;
-            }
-        }
+    .sidebar {
+    background: linear-gradient(to bottom, #333, #444);
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    margin: 15px;
+    height: calc(85vh - 30px); /* Account for margins */
+    overflow-y: auto;
+}
+.logo {
+    color: var(--primary-color);
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--secondary-bg);
+}
 
         .content {
+            background: linear-gradient(to bottom, #404040, var(--bg-color));
+            padding: 20px;
+            overflow-y: auto;
+        }
+/* Update song list styling */
+.song-list {
+    list-style: none;
+    margin-top: 15px;
+    padding-right: 10px; /* Add space for scrollbar */
+}
+
+.song-item {
+    padding: 15px;
+    margin-bottom: 12px;
+    background-color: var(--secondary-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.song-item:hover {
+    background-color: var(--hover-bg);
+    transform: translateX(5px);
+}
+
+.song-item.active {
+    background-color: var(--primary-color);
+    color: var(--bg-color);
+}
+
+.song-item.active .song-artist {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+/* Scrollbar styling */
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--button-hover);
+}
+
+        .song-art {
+            width: 40px;
+            height: 40px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .song-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .song-info {
             flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
         }
 
-        .right-side-container {
-            flex: 0 0 300px;
-            padding: 15px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+        .song-title {
+            font-weight: 500;
+            margin-bottom: 4px;
         }
 
-        @media (max-width: 1200px) {
-            .right-side-container {
-                display: none;
-            }
+        .song-artist {
+            font-size: 0.85em;
+            color: #b3b3b3;
         }
 
         .player-bar {
             background-color: #181818;
             border-top: 1px solid #282828;
-            padding: 16px;
+            padding: 16px 24px;
             display: grid;
             grid-template-columns: 1fr 2fr 1fr;
-            gap: 16px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            z-index: 1000;
+            align-items: center;
+            gap: 20px;
+            
         }
 
-        @media (max-width: 768px) {
-            .player-bar {
-                grid-template-columns: 1fr;
-                gap: 8px;
-                padding: 12px;
-                height: auto;
-            }
-
-            .player-controls {
-                order: -1;
-            }
-
-            .now-playing {
-                justify-content: center;
-            }
+        .now-playing {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .player-container {
-            width: 100%;
-            aspect-ratio: 16/9;
-            max-height: 60vh;
-            background-color: var(--bg-color);
-            border-radius: 8px;
-            overflow: hidden;
-            margin: 15px 0;
-        }
-
-        @media (max-width: 768px) {
-            .player-container {
-                aspect-ratio: 16/9;
-                max-height: 40vh;
-            }
-        }
-
-        .song-list {
-            list-style: none;
-            padding: 15px;
-        }
-
-        .song-item {
-            padding: 12px;
-            margin-bottom: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
 
         .control-buttons {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 16px;
+            margin-bottom: 8px;
         }
 
         .control-button {
@@ -165,6 +181,10 @@
             transition: all 0.2s;
         }
 
+        .control-button:hover {
+            color: var(--text-color);
+        }
+
         .play-pause {
             background-color: var(--text-color);
             color: var(--bg-color);
@@ -172,38 +192,318 @@
             height: 40px;
         }
 
-        /* Progress bar container */
-        #progressBarContainer {
+        .play-pause:hover {
+            transform: scale(1.1);
+            background-color: var(--text-color);
+        }
+
+        
+
+        .player-container {
             width: 100%;
-            height: 4px;
-            background-color: #404040;
-            border-radius: 2px;
-            cursor: pointer;
-            margin: 8px 0;
+            aspect-ratio: 16 / 9;
+            max-height: 70vh;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
         }
 
-        #progressBar {
+        .player-container iframe,
+        .player-container video,
+        .player-container audio {
+            width: 100%;
             height: 100%;
-            background-color: var(--primary-color);
-            border-radius: 2px;
-            transition: width 0.1s linear;
+            border: none;
         }
 
-        /* Weather and News sections */
-        #weather, #news {
-            margin: 15px;
-            padding: 15px;
+        .error-message {
+            color: #ff4444;
+            padding: 10px;
+            text-align: center;
+            background-color: rgba(255, 68, 68, 0.1);
+            border-radius: 4px;
+            margin-top: 16px;
+        }
+
+        .lyrics-header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--secondary-bg);
+    }
+
+    .lyrics-title {
+        color: var(--text-color);
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .lyrics-subtitle {
+        color: var(--primary-color);
+        font-size: 14px;
+    }
+
+    .lyrics-content {
+        white-space: pre-line;
+        color: #b3b3b3;
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 16px 0;
+    }
+
+    .lyrics-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: #b3b3b3;
+        text-align: center;
+        gap: 12px;
+    }
+
+    .lyrics-loading {
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .lyrics-error {
+        color: #ff4444;
+        padding: 16px;
+        text-align: center;
+        background-color: rgba(255, 68, 68, 0.1);
+        border-radius: 4px;
+    }
+
+    
+    @media (max-width: 1200px) {
+        .main-container {
+        grid-template-columns: minmax(300px, 1fr) 1fr;
+    }
+        .lyrics-panel {
+            display: none;
+        }
+    }
+
+    /* Loading spinner animation */
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--primary-color);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .player-bar {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+
+        .right-side-container {
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Curved Weather Card */
+        #weather {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 20px;
             background: linear-gradient(to bottom, #333, #444);
             border-radius: 15px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            color: #fff;
+            margin: 15px 0;
         }
 
-        @media (max-width: 768px) {
-            #weather, #news {
-                margin: 10px;
-                padding: 12px;
-            }
+        #weather h3 {
+            font-size: 1.5em;
+            color: var(--primary-color);
+            margin-bottom: 15px;
         }
+
+        #weather p {
+            font-size: 1em;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        #weather-info, #snowfall-info, #rain-chance-info, #time-info, #date-info {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        #news {
+    padding: 20px;
+    background: linear-gradient(to bottom, #333, #444);
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    margin-top: 20px;
+    /* Make the entire container look like a card */
+}
+
+#news h3 {
+    font-size: 1.5em;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    display: inline-block; /* Fix the title position */
+}
+
+.refresh-btn {
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: var(--bg-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    display: inline-block; /* Fix the button position */
+}
+
+/* Hover effect for refresh button */
+.refresh-btn:hover {
+    background-color: var(--button-hover);
+}
+
+/* News container with scrolling */
+.news-container {
+    margin-top: 15px;
+    max-height: 300px;  /* Limit the height of the scrollable area */
+    overflow-y: auto;   /* Allow scrolling for the news items */
+}
+
+.news-item {
+    padding: 15px;
+    margin-bottom: 12px;
+    background-color: var(--secondary-bg);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border-left: 3px solid var(--primary-color);
+}
+
+.news-item:hover {
+    transform: translateX(5px);
+    background-color: var(--hover-bg);
+}
+.news-item h4 {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.news-item p {
+    font-size: 1em;
+    color: #bbb;
+}
+
+.news-item a {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.news-item a:hover {
+    color: var(--primary-color);
+}
+
+.news-date {
+    margin-bottom: 8px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.news-source {
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: var(--primary-color);
+}
+
+/* Disabled button state */
+.refresh-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: var(--secondary-bg);
+}
+
+/* Category selector styling */
+.category-select {
+    padding: 8px;
+    border-radius: 4px;
+    background: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--primary-color);
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.category-select:hover {
+    border-color: var(--button-hover);
+}
+
+.category-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.3);
+}
+
+/*.volume-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;  Moves the container to the left 
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;  Aligns items (icon and slider) to the left 
+    gap: 8px;
+}
+
+
+        .volume-slider {
+            width: 100px;
+            height: 5px;
+            -webkit-appearance: none;
+            background: #404040;
+            border-radius: 2.5px;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .volume-icon {
+            width: 24px;
+            height: 24px;
+        }*/
 </style>
 </head>
 <body>
