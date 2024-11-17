@@ -589,53 +589,11 @@
     </div>
 
     <script>
-        // Helper function to get user's current location with better error handling
-function getLocation() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject(new Error("Geolocation is not supported by this browser."));
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                resolve({
-                    lat: position.coords.latitude,
-                    lon: position.coords.longitude
-                });
-            },
-            (error) => {
-                let errorMessage;
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage = "Please enable location access in your browser settings.";
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage = "Location information is unavailable.";
-                        break;
-                    case error.TIMEOUT:
-                        errorMessage = "Location request timed out.";
-                        break;
-                    default:
-                        errorMessage = "An unknown error occurred.";
-                }
-                reject(new Error(errorMessage));
-            },
-            {
-                timeout: 10000,
-                maximumAge: 0,
-                enableHighAccuracy: true
-            }
-        );
-    });
-}
-
-// Updated weather fetching function with direct API call and better error handling
-async function fetchWeather() {
+        
+        async function fetchWeather() {
     const weatherContainer = document.getElementById('weather');
-    
+
     try {
-        // Show loading state
         weatherContainer.innerHTML = `
             <h3>Weather</h3>
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -644,63 +602,38 @@ async function fetchWeather() {
             </div>
         `;
 
-        // Get location
         const { lat, lon } = await getLocation();
-        
-        // Construct the weather API URL correctly
-        const GNEWS_API_URL = `https://cors-anywhere.herokuapp.com/https://gnews.io/api/v4/top-headlines?token=8721fce00816540e1f1a7511e4bcd66a&lang=en&country=us`;
 
-        
-        // Add error handling for the fetch request
-        const response = await fetch(weatherUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-
+        // Fetch weather from backend
+        const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
         if (!response.ok) {
-            throw new Error(`Weather API responded with status: ${response.status}`);
+            throw new Error(`Weather API error: ${response.statusText}`);
         }
 
         const data = await response.json();
 
-        // Validate the data
-        if (!data.daily) {
-            throw new Error('Invalid weather data received');
-        }
+        const temp = Math.round(data.main.temp);
+        const weather = data.weather[0].description;
+        const city = data.name;
 
-        // Format the data
-        const temp = Math.round(data.daily.temperature_2m_max[0]);
-        const snowfall = data.daily.snowfall_sum[0] > 0 ? "Yes" : "No";
-        const rainChance = data.daily.precipitation_hours[0] > 0 ? "100%" : "0%";
-        const sunrise = formatTimeTo12Hour(data.daily.sunrise[0].slice(11, 16));
-        const sunset = formatTimeTo12Hour(data.daily.sunset[0].slice(11, 16));
-        const date = new Date().toLocaleDateString('en-GB');
-
-        // Update the weather container
         weatherContainer.innerHTML = `
             <h3>Weather</h3>
-            <p id="weather-info">Temperature: ${temp}°C</p>
-            <p id="snowfall-info">Snowfall: ${snowfall}</p>
-            <p id="rain-chance-info">Chance of Rain: ${rainChance}</p>
-            <p id="time-info">Sunrise: ${sunrise}</p>
-            <p id="time-info">Sunset: ${sunset}</p>
-            <p id="date-info">Date: ${date}</p>
+            <p>Location: ${city}</p>
+            <p>Temperature: ${temp}°C</p>
+            <p>Condition: ${weather}</p>
         `;
-
     } catch (error) {
-        console.error('Weather error:', error);
+        console.error("Weather error:", error);
         weatherContainer.innerHTML = `
             <h3>Weather</h3>
             <p style="color: #ff4444;">
                 ${error.message}
-                <button onclick="fetchWeather()" 
-                        style="background: var(--primary-color); 
-                               color: white; 
-                               border: none; 
-                               padding: 5px 10px; 
-                               border-radius: 4px; 
+                <button onclick="fetchWeather()"
+                        style="background: var(--primary-color);
+                               color: white;
+                               border: none;
+                               padding: 5px 10px;
+                               border-radius: 4px;
                                margin-left: 10px;">
                     Retry
                 </button>
@@ -708,63 +641,69 @@ async function fetchWeather() {
         `;
     }
 }
+//News Fetching in Frontend
+function fetchNews() {
+    const newsInfo = document.getElementById('newsInfo');
+    newsInfo.innerHTML = `
+        <div class="news-item">
+            <div class="loading-spinner"></div>
+            <p>Loading latest news...</p>
+        </div>
+    `;
 
-// Helper function to format time to 12-hour format
-function formatTimeTo12Hour(time) {
-    const [hour, minute] = time.split(':');
-    const isPM = +hour >= 12;
-    const formattedHour = isPM ? hour - 12 || 12 : +hour || 12;
-    const period = isPM ? 'PM' : 'AM';
-    return `${formattedHour}:${minute} ${period}`;
-}
-
-// Add auto-retry functionality
-let weatherRetryCount = 0;
-const MAX_RETRIES = 3;
-
-function initializeWeather() {
-    fetchWeather().catch(error => {
-        if (weatherRetryCount < MAX_RETRIES) {
-            weatherRetryCount++;
-            setTimeout(initializeWeather, 2000 * weatherRetryCount); // Exponential backoff
-        }
-    });
-}
-
-// Initialize weather on page load
-document.addEventListener('DOMContentLoaded', initializeWeather);
-      function loadSongs() {
-    fetch('songs.json') // Fetch the local JSON file
-        .then(response => response.json())
+    fetch('/api/news?country=us')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`News API error: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            songs = data;
-            const songList = document.getElementById('songList');
-            songList.innerHTML = '';
+            newsInfo.innerHTML = ''; // Clear loading spinner
 
-            songs.forEach((song, index) => {
-                if (!song['Track name']) return;
+            if (!data.articles || data.articles.length === 0) {
+                throw new Error("No news articles found.");
+            }
 
-                const li = document.createElement('li');
-                li.className = 'song-item';
-                li.innerHTML = `
-                    <div class="song-info">
-                        <div class="song-title">${song['Track name']}</div>
-                        <div class="song-artist">${song['Artist name'] || 'Unknown Artist'}</div>
-                    </div>
-                `;
+            data.articles.slice(0, 5).forEach(article => {
+                const newsElement = document.createElement('div');
+                newsElement.classList.add('news-item');
 
-                li.addEventListener('click', () => {
-                    createPlayer(song, song, index);
+                const publishedDate = new Date(article.publishedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
                 });
 
-                songList.appendChild(li);
+                newsElement.innerHTML = `
+                    <h4>
+                        <a href="${article.url}" target="_blank" rel="noopener noreferrer">
+                            ${article.title}
+                        </a>
+                    </h4>
+                    <p class="news-date">${publishedDate}</p>
+                    <p>${article.description || "No description available."}</p>
+                    <p class="news-source">Source: ${article.source.name}</p>
+                `;
+                newsInfo.appendChild(newsElement);
             });
         })
         .catch(error => {
-            console.error('Error loading songs:', error);
-            document.getElementById('errorMessage').textContent = 'Error loading songs';
+            console.error("News error:", error);
+            newsInfo.innerHTML = `
+                <div class="news-item" style="color: #ff4444; background-color: rgba(255, 68, 68, 0.1);">
+                    <h4>Error Loading News</h4>
+                    <p>Unable to load news at this time. Please try again later.</p>
+                    <p style="font-size: 0.8em;">Error: ${error.message}</p>
+                </div>
+            `;
         });
 }
+//
+document.addEventListener('DOMContentLoaded', () => {
+    initializeWeather(); // Fetch weather data
+    fetchNews();         // Fetch news data
+});
 
  
         //music functions  
