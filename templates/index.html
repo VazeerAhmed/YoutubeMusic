@@ -444,6 +444,24 @@
     font-size: 0.9em;
     color: var(--primary-color);
 }
+ .news-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.news-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.news-container::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.news-container::-webkit-scrollbar-thumb:hover {
+    background: var(--button-hover);
+}
+
 
 /* Disabled button state */
 .refresh-btn:disabled {
