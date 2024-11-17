@@ -732,162 +732,39 @@ function initializeWeather() {
 
 // Initialize weather on page load
 document.addEventListener('DOMContentLoaded', initializeWeather);
-       // Constants for the news API
-const BASE_URL = "https://saurav.tech/NewsAPI";
-const CATEGORIES = ["general", "business", "technology", "sports", "entertainment", "health", "science"];
-
-// Enhanced news fetching function
-function fetchNews() {
-    const category = "general"; // You can make this dynamic later
-    const countryCode = "us";   // You can make this dynamic later
-    const newsUrl = `${BASE_URL}/top-headlines/category/${category}/${countryCode}.json`;
-
-    // Show loading state
-    const newsInfo = document.getElementById('newsInfo');
-    newsInfo.innerHTML = `
-        <div class="news-item">
-            <div class="loading-spinner"></div>
-            <p>Loading latest news...</p>
-        </div>
-    `;
-
-    fetch(newsUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
+      function loadSongs() {
+    fetch('songs.json') // Fetch the local JSON file
+        .then(response => response.json())
         .then(data => {
-            newsInfo.innerHTML = ''; // Clear loading message
-            
-            if (!data.articles || data.articles.length === 0) {
-                throw new Error('No articles found');
-            }
+            songs = data;
+            const songList = document.getElementById('songList');
+            songList.innerHTML = '';
 
-            // Display only the first 5 articles
-            data.articles.slice(0, 5).forEach(article => {
-                const newsElement = document.createElement('div');
-                newsElement.classList.add('news-item');
-                
-                // Format the publication date
-                const publishedDate = new Date(article.publishedAt);
-                const formattedDate = publishedDate.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
+            songs.forEach((song, index) => {
+                if (!song['Track name']) return;
+
+                const li = document.createElement('li');
+                li.className = 'song-item';
+                li.innerHTML = `
+                    <div class="song-info">
+                        <div class="song-title">${song['Track name']}</div>
+                        <div class="song-artist">${song['Artist name'] || 'Unknown Artist'}</div>
+                    </div>
+                `;
+
+                li.addEventListener('click', () => {
+                    createPlayer(song, song, index);
                 });
 
-                newsElement.innerHTML = `
-                    <h4>
-                        <a href="${article.url}" target="_blank" rel="noopener noreferrer">
-                            ${article.title}
-                        </a>
-                    </h4>
-                    <p class="news-date" style="font-size: 0.8em; color: #666;">
-                        ${formattedDate}
-                    </p>
-                    <p>${article.description || 'No description available'}</p>
-                    <p class="news-source" style="font-size: 0.9em; color: var(--primary-color);">
-                        Source: ${article.source.name}
-                    </p>
-                `;
-                newsInfo.appendChild(newsElement);
+                songList.appendChild(li);
             });
-
-            // Update the last refresh time
-            const newsHeader = document.querySelector('#news h3');
-            const timeString = new Date().toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            newsHeader.innerHTML = `Latest News <span style="font-size: 0.8em; color: #666;">(Updated at ${timeString})</span>`;
         })
         .catch(error => {
-            console.error('Error fetching news:', error);
-            newsInfo.innerHTML = `
-                <div class="news-item" style="color: #ff4444; background-color: rgba(255, 68, 68, 0.1);">
-                    <h4>Error Loading News</h4>
-                    <p>Unable to load news at this time. Please try again later.</p>
-                    <p style="font-size: 0.8em;">Error: ${error.message}</p>
-                </div>
-            `;
+            console.error('Error loading songs:', error);
+            document.getElementById('errorMessage').textContent = 'Error loading songs';
         });
 }
 
-// Enhanced refresh function with debouncing
-let refreshTimeout;
-function refreshNews() {
-    const refreshButton = document.getElementById('refreshNews');
-    
-    // Prevent rapid refreshing
-    if (refreshButton.disabled) {
-        return;
-    }
-
-    // Update button state
-    refreshButton.disabled = true;
-    refreshButton.innerHTML = `
-        <span class="loading-spinner"></span>
-        Refreshing...
-    `;
-
-    clearTimeout(refreshTimeout);
-    
-    fetchNews();
-    
-    // Re-enable button after 10 seconds to prevent spam
-    refreshTimeout = setTimeout(() => {
-        refreshButton.disabled = false;
-        refreshButton.textContent = 'Refresh News';
-    }, 10000);
-}
-
-// Optional: Add category selection functionality
-function createCategorySelector() {
-    const newsContainer = document.getElementById('news');
-    const selectorContainer = document.createElement('div');
-    selectorContainer.style.marginBottom = '15px';
-    
-    const select = document.createElement('select');
-    select.className = 'category-select';
-    select.style.cssText = `
-        padding: 8px;
-        border-radius: 4px;
-        background: var(--secondary-bg);
-        color: var(--text-color);
-        border: 1px solid var(--primary-color);
-        margin-right: 10px;
-    `;
-
-    CATEGORIES.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
-        select.appendChild(option);
-    });
-
-    select.addEventListener('change', (e) => {
-        fetchNewsForCategory(e.target.value);
-    });
-
-    selectorContainer.appendChild(select);
-    newsContainer.insertBefore(selectorContainer, newsContainer.firstChild);
-}
-
-// Fetch news for a specific category
-function fetchNewsForCategory(category) {
-    const countryCode = "us";
-    const newsUrl = `${BASE_URL}/top-headlines/category/${category}/${countryCode}.json`;
-    // ... rest of the fetch logic remains the same ...
-}
-
-// Initialize the news section
-document.addEventListener('DOMContentLoaded', () => {
-    fetchNews();
-    // Uncomment the line below if you want to add category selection
-    // createCategorySelector();
-}); 
  
         //music functions  
         document.addEventListener('DOMContentLoaded', function() {
