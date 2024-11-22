@@ -43,6 +43,10 @@
     margin: 15px;
     height: calc(85vh - 30px); /* Account for margins */
     overflow-y: auto;
+    position: sticky; /* Keeps the sidebar in place during scrolling */
+    top: 0; /* Sticks the sidebar to the top of the viewport */
+    overflow-y: auto; /* Enables scrolling for the sidebar content */
+
 }
 .logo {
     color: var(--primary-color);
