@@ -510,7 +510,13 @@
         }*/
 .search-container {
     padding: 0 15px 15px 15px;
+    position: sticky; /* Makes the container fixed during scrolling */
+    top: 0; /* Sticks the container to the top of its parent */
+    z-index: 10; /* Ensures it stays on top of the scrolling content */
+    background-color: linear-gradient(to bottom, #333, #444); /* Optional: Matches the sidebar's background */
+    border-bottom: 1px solid var(--secondary-bg); /* Optional: Adds a bottom separator */
 }
+      
 
 .search-input {
     width: 100%;
