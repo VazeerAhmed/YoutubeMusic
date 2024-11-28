@@ -612,6 +612,25 @@
         .spotify-track-info {
             flex-grow: 1;
         }
+        #errorMessage {
+    background-color: #ffdddd;
+    border: 1px solid #ff0000;
+    color: #ff0000;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    display: block;
+}
+
+.error-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.error-alert strong {
+    color: #cc0000;
+}
 </style>
 </head>
 <body>
@@ -703,27 +722,76 @@
     </div>
 
     <script>
-        class SpotifySearch {
+        document.addEventListener('DOMContentLoaded', () => {
+    class MusicSearch {
         constructor() {
+            // Spotify search elements
+            this.spotifySearchInput = document.getElementById('spotifySearchInput');
+            this.spotifySearchResults = document.getElementById('spotifySearchResults');
+            
+            // Default search input
+            this.defaultSearchInput = document.getElementById('searchInput');
+            
+            // Error message container
+            this.errorContainer = document.getElementById('errorMessage');
+            
+            // Spotify API credentials
             this.clientId = '9ec48c569aae4f41a59d755b3cd410ab';
             this.clientSecret = '023ddf0550074b999e3223661098e3ca';
-            this.searchInput = document.getElementById('spotifySearchInput');
-            this.searchResults = document.getElementById('spotifySearchResults');
+            
             this.accessToken = null;
             this.tokenExpiration = 0;
-
+            
             this.initEventListeners();
         }
-
+        
         initEventListeners() {
-            this.searchInput.addEventListener('input', this.debounce(async (e) => {
-                const query = e.target.value.trim();
-                if (query.length > 2) {
-                    await this.searchSpotifySongs(query);
-                }
-            }, 300));
+            // Spotify search
+            this.spotifySearchInput.addEventListener('input', 
+                this.debounce(async (e) => {
+                    const query = e.target.value.trim();
+                    if (query.length > 2) {
+                        try {
+                            await this.searchSpotifySongs(query);
+                        } catch (error) {
+                            this.displayError(error.message);
+                        }
+                    }
+                }, 300)
+            );
+            
+            // Default search
+            this.defaultSearchInput.addEventListener('input', 
+                this.debounce(async (e) => {
+                    const query = e.target.value.trim();
+                    if (query.length > 2) {
+                        try {
+                            await this.searchLocalSongs(query);
+                        } catch (error) {
+                            this.displayError(error.message);
+                        }
+                    }
+                }, 300)
+            );
         }
-
+        
+        displayError(message) {
+            if (this.errorContainer) {
+                this.errorContainer.innerHTML = `
+                    <div class="error-alert">
+                        <strong>Error:</strong> ${message}
+                    </div>
+                `;
+                
+                // Automatically clear error after 5 seconds
+                setTimeout(() => {
+                    this.errorContainer.innerHTML = '';
+                }, 5000);
+            } else {
+                console.error('Error container not found:', message);
+            }
+        }
+        
         debounce(func, delay) {
             let timeoutId;
             return function() {
@@ -733,17 +801,16 @@
                 timeoutId = setTimeout(() => func.apply(context, args), delay);
             };
         }
-
+        
         async getAccessToken() {
             // Check if current token is valid
             if (this.accessToken && Date.now() < this.tokenExpiration) {
                 return this.accessToken;
             }
-
-            // Encode client credentials
-            const credentials = btoa(`${this.clientId}:${this.clientSecret}`);
-
+            
             try {
+                const credentials = btoa(`${this.clientId}:${this.clientSecret}`);
+                
                 const response = await fetch('https://accounts.spotify.com/api/token', {
                     method: 'POST',
                     headers: {
@@ -752,47 +819,85 @@
                     },
                     body: 'grant_type=client_credentials'
                 });
-
+                
                 if (!response.ok) {
-                    throw new Error('Failed to get access token');
+                    throw new Error('Failed to obtain Spotify access token');
                 }
-
+                
                 const data = await response.json();
                 this.accessToken = data.access_token;
                 this.tokenExpiration = Date.now() + (data.expires_in * 1000);
+                
                 return this.accessToken;
             } catch (error) {
-                console.error('Spotify Token Error:', error);
-                this.searchResults.innerHTML = '<p>Error connecting to Spotify</p>';
-                return null;
+                this.displayError('Spotify authentication failed');
+                throw error;
             }
         }
-
+        
         async searchSpotifySongs(query) {
             try {
                 const token = await this.getAccessToken();
-                if (!token) return;
-
-                const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
+                
+                const response = await fetch(
+                    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, 
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
                     }
-                });
-
+                );
+                
                 if (!response.ok) {
-                    throw new Error('Search failed');
+                    throw new Error('Spotify search failed');
                 }
-
+                
                 const data = await response.json();
-                this.displaySearchResults(data.tracks.items);
+                
+                if (!data.tracks || data.tracks.items.length === 0) {
+                    this.displayError('No Spotify tracks found');
+                    this.spotifySearchResults.innerHTML = '';
+                    return;
+                }
+                
+                this.displaySpotifyResults(data.tracks.items);
             } catch (error) {
-                console.error('Spotify Search Error:', error);
-                this.searchResults.innerHTML = '<p>Error searching songs</p>';
+                this.displayError(error.message);
+                this.spotifySearchResults.innerHTML = '';
             }
         }
-
-        displaySearchResults(tracks) {
-            this.searchResults.innerHTML = tracks.map(track => `
+        
+        async searchLocalSongs(query) {
+            try {
+                const response = await fetch('/load_songs');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load local songs');
+                }
+                
+                const songs = await response.json();
+                
+                // Filter local songs based on query
+                const filteredSongs = songs.filter(song => 
+                    song.Title.toLowerCase().includes(query.toLowerCase()) || 
+                    song.Artist.toLowerCase().includes(query.toLowerCase())
+                );
+                
+                if (filteredSongs.length === 0) {
+                    this.displayError('No local songs found');
+                    return;
+                }
+                
+                // Implement display logic for local songs
+                // You might want to create a method similar to displaySpotifyResults
+                this.displayLocalSongs(filteredSongs);
+            } catch (error) {
+                this.displayError(error.message);
+            }
+        }
+        
+        displaySpotifyResults(tracks) {
+            this.spotifySearchResults.innerHTML = tracks.map(track => `
                 <div class="spotify-track" data-uri="${track.uri}" data-preview="${track.preview_url || ''}">
                     <img src="${track.album.images[0]?.url || 'placeholder.jpg'}" alt="Album Cover">
                     <div class="spotify-track-info">
@@ -801,42 +906,55 @@
                     </div>
                 </div>
             `).join('');
-
-            // Add click event to play tracks
-            this.searchResults.querySelectorAll('.spotify-track').forEach(trackElement => {
+            
+            // Add click events to tracks
+            this.spotifySearchResults.querySelectorAll('.spotify-track').forEach(trackElement => {
                 trackElement.addEventListener('click', () => {
                     const previewUrl = trackElement.dataset.preview;
-                    const trackUri = trackElement.dataset.uri;
-
+                    
                     if (previewUrl) {
-                        // Play preview (30-second clip)
                         const audio = new Audio(previewUrl);
                         audio.play();
                     }
-
-                    // Update player UI or perform other actions
+                    
                     this.updateNowPlaying(trackElement);
                 });
             });
         }
-
+        
+        displayLocalSongs(songs) {
+            // Implement similar to displaySpotifyResults, 
+            // but using local song data structure
+            // For example:
+            const resultsHTML = songs.map(song => `
+                <div class="local-track" data-url="${song.URL}">
+                    <div class="track-info">
+                        <h3>${song.Title}</h3>
+                        <p>${song.Artist}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            this.spotifySearchResults.innerHTML = resultsHTML;
+        }
+        
         updateNowPlaying(trackElement) {
-            // Example of updating now playing information
             const trackName = trackElement.querySelector('h3').textContent;
             const artistName = trackElement.querySelector('p').textContent;
-            const trackImage = trackElement.querySelector('img').src;
-
+            const trackImage = trackElement.querySelector('img')?.src;
+            
             document.getElementById('nowPlayingTitle').textContent = trackName;
             document.getElementById('nowPlayingArtist').textContent = artistName;
-            document.getElementById('nowPlayingImage').src = trackImage;
+            
+            if (trackImage) {
+                document.getElementById('nowPlayingImage').src = trackImage;
+            }
         }
     }
-
-    // Initialize Spotify search on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        new SpotifySearch();
-    });
-
+    
+    // Initialize the music search
+    new MusicSearch();
+});
         
 
 function initializeSearch() {
