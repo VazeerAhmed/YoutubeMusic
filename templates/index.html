@@ -12,14 +12,16 @@
             --secondary-bg: #282828;
             --hover-bg: #404040;
             --button-hover: #1ed760;
+            --scrollbar-thumb-color: #1DB954;
+            --scrollbar-thumb-hover: #1ed760;
         }
-
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             background-color: var(--bg-color);
@@ -27,164 +29,175 @@
             height: 100vh;
             display: grid;
             grid-template-rows: 1fr auto;
+            overflow: hidden; /* Prevents scrolling for the main body */
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px minmax(0, 1fr) 300px;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            background: linear-gradient(to bottom, #333, #444);
+            border-radius: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin: 15px;
+            height: calc(85vh - 30px);
+            overflow-y: auto;
+            position: sticky;
+            top: 0;
+        }
+        
+        /* Custom scrollbar for the sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb-color);
+            border-radius: 4px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        
+        .logo {
+            color: var(--primary-color);
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--secondary-bg);
+        }
+        
+        /* Search Container Customization */
+        .search-container {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background: var(--secondary-bg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--hover-bg);
+            color: var(--text-color);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 5px var(--primary-color);
+        }
+        
+        .search-button {
+            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .search-button:hover {
+            background-color: var(--button-hover);
         }
 
-        .main-container {
-        display: grid;
-        grid-template-columns: 300px minmax(0, 1fr) 300px;
-        overflow: hidden;
-    }
+        /* Error Message Container */
+        .error-message {
+            color: var(--error-text);
+            padding: 15px;
+            text-align: center;
+            background-color: var(--error-bg);
+            border-radius: 5px;
+            margin: 15px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
 
-    .sidebar {
-    background: linear-gradient(to bottom, #333, #444);
-    border-radius: 15px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-    padding: 20px;
-    margin: 15px;
-    height: calc(85vh - 30px); /* Account for margins */
-    overflow-y: auto;
-    position: sticky; /* Keeps the sidebar in place during scrolling */
-    top: 0; /* Sticks the sidebar to the top of the viewport */
-    overflow-y: auto; /* Enables scrolling for the sidebar content */
-
-}
-.logo {
-    color: var(--primary-color);
-    font-size: 1.5em;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--secondary-bg);
-}
-
+        /* Content */
         .content {
             background: linear-gradient(to bottom, #404040, var(--bg-color));
             padding: 20px;
-            overflow-y: auto;
+            overflow-y: auto; /* Enables scrolling for the content */
         }
-/* Update song list styling */
-.song-list {
-    list-style: none;
-    margin-top: 15px;
-    padding-right: 10px; /* Add space for scrollbar */
-}
-
-.song-item {
-    padding: 15px;
-    margin-bottom: 12px;
-    background-color: var(--secondary-bg);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.song-item:hover {
-    background-color: var(--hover-bg);
-    transform: translateX(5px);
-}
-
-.song-item.active {
-    background-color: var(--primary-color);
-    color: var(--bg-color);
-}
-
-.song-item.active .song-artist {
-    color: rgba(0, 0, 0, 0.7);
-}
-
-/* Scrollbar styling */
-.sidebar::-webkit-scrollbar {
-    width: 8px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 4px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-    background: var(--button-hover);
-}
-
-#ad-container {
-    display: none; /* Hidden by default */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9); /* Semi-transparent black background */
-    z-index: 1000; /* Ensure it appears above all other elements */
-    display: flex;
-    justify-content: center;
-    align-items: center; /* Center the video in the viewport */
-}
-
-#ad-video {
-    width: 100%;
-    height: auto; /* Maintain aspect ratio */
-    max-height: 100%; /* Prevent it from overflowing vertically */
-    border-radius: 0; /* Remove rounded corners for a fullscreen look */
-    outline: none; /* Remove default focus outline */
-    object-fit: contain; /* Ensure the video scales nicely within the container */
-}
-
-#skip-button {
-    position: absolute;
-    top: 20px; /* Position near the top-right corner */
-    right: 20px;
-    background: #ff0000; /* Bright red for attention */
-    color: #fff; /* White text */
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease; /* Smooth hover effect */
-    z-index: 1001; /* Ensure it's above the ad container */
-}
-
-#skip-button:hover {
-    background: #e60000; /* Slightly darker red on hover */
-    transform: scale(1.1); /* Slight zoom effect */
-}
-
-        .song-art {
-            width: 40px;
-            height: 40px;
+        
+        /* Custom scrollbar for the content */
+        .content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .content::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb-color);
+            border-radius: 4px;
+        }
+        
+        .content::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        
+        /* Container Titles */
+        h3 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Song List Styling */
+        .song-list {
+            list-style: none;
+            margin-top: 15px;
+            padding-right: 10px;
+        }
+        
+        .song-item {
+            padding: 15px;
+            margin-bottom: 12px;
             background-color: var(--secondary-bg);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-
-        .song-art img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 4px;
+        
+        .song-item:hover {
+            background-color: var(--hover-bg);
+            transform: translateX(5px);
         }
-
-        .song-info {
-            flex: 1;
+        
+        .song-item.active {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
         }
-
-        .song-title {
-            font-weight: 500;
-            margin-bottom: 4px;
+        
+        .song-item.active .song-artist {
+            color: rgba(0, 0, 0, 0.7);
         }
-
-        .song-artist {
-            font-size: 0.85em;
-            color: #b3b3b3;
+        
+        .song-list {
+            scroll-behavior: smooth;
         }
-
+        
+        /* Player Bar */
         .player-bar {
             background-color: #181818;
             border-top: 1px solid #282828;
@@ -193,60 +206,29 @@
             grid-template-columns: 1fr 2fr 1fr;
             align-items: center;
             gap: 20px;
-            
         }
-
+        
         .now-playing {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-
-        .player-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .control-buttons {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 8px;
-        }
-
-        .control-button {
-            background: none;
-            border: none;
-            color: #b3b3b3;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .control-button:hover {
-            color: var(--text-color);
-        }
-
-        .play-pause {
-            background-color: var(--text-color);
-            color: var(--bg-color);
-            width: 40px;
-            height: 40px;
-        }
-
-        .play-pause:hover {
-            transform: scale(1.1);
-            background-color: var(--text-color);
-        }
-
         
-
+        /* Reduced Song Logo Size */
+        .now-playing .song-art {
+            width: 30px; /* Reduced size */
+            height: 30px; /* Reduced size */
+            border-radius: 4px;
+            background-color: var(--secondary-bg);
+        }
+        
+        .now-playing .song-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
         .player-container {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -256,7 +238,7 @@
             overflow: hidden;
             margin: 20px 0;
         }
-
+        
         .player-container iframe,
         .player-container video,
         .player-container audio {
@@ -265,110 +247,34 @@
             border: none;
         }
 
-        .error-message {
-            color: #ff4444;
-            padding: 10px;
-            text-align: center;
-            background-color: rgba(255, 68, 68, 0.1);
-            border-radius: 4px;
-            margin-top: 16px;
-        }
+        /* Custom Player Controls Shape */
+.control-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
 
-        .lyrics-header {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid var(--secondary-bg);
-    }
+.control-button {
+    width: 40px;
+    height: 40px;
+    background: var(--secondary-bg);
+    color: var(--text-color);
+    border: none;
+    border-radius: 50%; /* Circular shape */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
 
-    .lyrics-title {
-        color: var(--text-color);
-        font-size: 18px;
-        font-weight: bold;
-    }
+.control-button:hover {
+    background: var(--hover-bg);
+    transform: scale(1.1);
+}
 
-    .lyrics-subtitle {
-        color: var(--primary-color);
-        font-size: 14px;
-    }
-
-    .lyrics-content {
-        white-space: pre-line;
-        color: #b3b3b3;
-        font-size: 14px;
-        line-height: 1.6;
-        padding: 16px 0;
-    }
-
-    .lyrics-placeholder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 200px;
-        color: #b3b3b3;
-        text-align: center;
-        gap: 12px;
-    }
-
-    .lyrics-loading {
-        color: var(--primary-color);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .lyrics-error {
-        color: #ff4444;
-        padding: 16px;
-        text-align: center;
-        background-color: rgba(255, 68, 68, 0.1);
-        border-radius: 4px;
-    }
-
-    
-    @media (max-width: 1200px) {
-        .main-container {
-        grid-template-columns: minmax(300px, 1fr) 1fr;
-    }
-        .lyrics-panel {
-            display: none;
-        }
-    }
-
-    /* Loading spinner animation */
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    .loading-spinner {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--primary-color);
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-right: 8px;
-        vertical-align: middle;
-    }
-
-        @media (max-width: 768px) {
-            .main-container {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar {
-                display: none;
-            }
-
-            .player-bar {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-        }
-
+        
+        /* Weather & News */
         .right-side-container {
             padding: 20px;
             background-color: var(--secondary-bg);
@@ -376,12 +282,30 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            overflow-y: auto; /* Enables scrolling */
         }
-
-        /* Curved Weather Card */
-        #weather {
-            max-height: 300px;
-            overflow-y: auto;
+        
+        /* Custom scrollbar for the right-side container */
+        .right-side-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .right-side-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .right-side-container::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb-color);
+            border-radius: 4px;
+        }
+        
+        .right-side-container::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        
+        #weather,
+        #news {
             padding: 20px;
             background: linear-gradient(to bottom, #333, #444);
             border-radius: 15px;
@@ -389,246 +313,118 @@
             color: #fff;
             margin: 15px 0;
         }
-
-        #weather h3 {
+        
+        #weather h3,
+        #news h3 {
             font-size: 1.5em;
             color: var(--primary-color);
             margin-bottom: 15px;
         }
-
-        #weather p {
+        
+        .news-container {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        /* News Articles Hover Effect */
+        .news-item {
+            padding: 15px;
+            margin-bottom: 12px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .news-item:hover {
+            transform: translateX(5px);
+            background-color: var(--hover-bg);
+        }
+        
+        .news-item h4 {
+            margin-bottom: 8px;
+            line-height: 1.4;
+            color: var(--text-color);
+        }
+        
+        .news-item p {
             font-size: 1em;
-            line-height: 1.5;
-            margin-bottom: 10px;
+            color: #bbb;
         }
-
-        #weather-info, #snowfall-info, #rain-chance-info, #time-info, #date-info {
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
+        
+        .news-item a {
+            color: var(--text-color);
+            text-decoration: none;
+            transition: color 0.2s ease;
         }
-        #news {
-    padding: 20px;
-    background: linear-gradient(to bottom, #333, #444);
-    border-radius: 15px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-    color: #fff;
-    margin-top: 20px;
-    /* Make the entire container look like a card */
-}
-
-#news h3 {
-    font-size: 1.5em;
-    color: var(--primary-color);
-    margin-bottom: 10px;
-    display: inline-block; /* Fix the title position */
-}
-
-.refresh-btn {
-    padding: 10px;
-    background-color: var(--primary-color);
-    color: var(--bg-color);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 10px;
-    display: inline-block; /* Fix the button position */
-}
-
-/* Hover effect for refresh button */
-.refresh-btn:hover {
-    background-color: var(--button-hover);
-}
-
-/* News container with scrolling */
-.news-container {
-    margin-top: 15px;
-    max-height: 300px;  /* Limit the height of the scrollable area */
-    overflow-y: auto;   /* Allow scrolling for the news items */
-}
-
-.news-item {
-    padding: 15px;
-    margin-bottom: 12px;
-    background-color: var(--secondary-bg);
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    border-left: 3px solid var(--primary-color);
-}
-
-.news-item:hover {
-    transform: translateX(5px);
-    background-color: var(--hover-bg);
-}
-.news-item h4 {
-    margin-bottom: 8px;
-    line-height: 1.4;
-}
-
-.news-item p {
-    font-size: 1em;
-    color: #bbb;
-}
-
-.news-item a {
-    color: var(--text-color);
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-
-.news-item a:hover {
-    color: var(--primary-color);
-}
-
-.news-date {
-    margin-bottom: 8px;
-    font-size: 0.8em;
-    color: #666;
-}
-
-.news-source {
-    margin-top: 8px;
-    font-size: 0.9em;
-    color: var(--primary-color);
-}
-
-/* Disabled button state */
-.refresh-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    background-color: var(--secondary-bg);
-}
-
-/* Category selector styling */
-.category-select {
-    padding: 8px;
-    border-radius: 4px;
-    background: var(--secondary-bg);
-    color: var(--text-color);
-    border: 1px solid var(--primary-color);
-    margin-right: 10px;
-    cursor: pointer;
-}
-
-.category-select:hover {
-    border-color: var(--button-hover);
-}
-
-.category-select:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.3);
-}
-
-/*.volume-controls {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;  Moves the container to the left 
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;  Aligns items (icon and slider) to the left 
-    gap: 8px;
-}
-
-
-        .volume-slider {
-            width: 100px;
-            height: 5px;
-            -webkit-appearance: none;
-            background: #404040;
-            border-radius: 2.5px;
+        
+        .news-item a:hover {
+            color: var(--primary-color);
         }
-
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 12px;
-            height: 12px;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+                grid-template-areas:
+                    "sidebar"
+                    "content"
+                    "right-side"
+                    "player-bar";
+                padding: 10px;
+            }
+        
+            .sidebar {
+                display: none;
+            }
+        
+            .content {
+                padding: 10px;
+            }
+        
+            .right-side-container {
+                padding: 10px;
+            }
+        
+            .player-bar {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 10px;
+            }
+        
+            .song-item {
+                padding: 10px;
+                margin-bottom: 8px;
+            }
+        
+            .player-container {
+                max-height: 50vh;
+            }
         }
-
-        .volume-icon {
-            width: 24px;
-            height: 24px;
-        }*/
-.search-container {
-    padding: 0 15px 15px 15px;
-    position: sticky; /* Makes the container fixed during scrolling */
-    top: 0; /* Sticks the container to the top of its parent */
-    z-index: 10; /* Ensures it stays on top of the scrolling content */
-    background-color: linear-gradient(to bottom, #333, #444); /* Optional: Matches the sidebar's background */
-    border-bottom: 1px solid var(--secondary-bg); /* Optional: Adds a bottom separator */
-}
-      
-
-.search-input {
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    background-color: var(--secondary-bg);
-    color: var(--text-color);
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.search-input:focus {
-    outline: none;
-    background-color: var(--hover-bg);
-    box-shadow: 0 0 0 2px var(--primary-color);
-}
-
-.song-item {
-    visibility: visible;
-    opacity: 1;
-    transition: visibility 0.3s, opacity 0.3s;
-}
-
-.song-item.hidden {
-    display: none;
-    visibility: hidden;
-    opacity: 0;
-    height: 0;
-    margin: 0;
-    padding: 0;
-}
-.song-list {
-    scroll-behavior: smooth;
-}
-
-/*.volume-controls {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;  Moves the container to the left 
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;  Aligns items (icon and slider) to the left 
-    gap: 8px;
-}
-
-
-        .volume-slider {
-            width: 100px;
-            height: 5px;
-            -webkit-appearance: none;
-            background: #404040;
-            border-radius: 2.5px;
+        
+        @media (max-width: 480px) {
+            .main-container {
+                gap: 5px;
+            }
+        
+            .content,
+            .right-side-container,
+            .player-bar {
+                padding: 5px;
+            }
+        
+            .song-item {
+                padding: 8px;
+                margin-bottom: 6px;
+            }
+        
+            .player-container {
+                max-height: 40vh;
+            }
         }
-
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 12px;
-            height: 12px;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .volume-icon {
-            width: 24px;
-            height: 24px;
-        }*/
+        
 </style>
 </head>
 <body>
