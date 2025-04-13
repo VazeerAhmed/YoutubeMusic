@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Player</title>
+    <link rel="icon" href="image/MyMusic.png" type="image/png">
+
+    <title>MyMusic</title>
     <style>
         :root {
             --primary-color: #1DB954;
@@ -74,12 +76,14 @@
         }
         
         .logo {
+            font-family: inherit; /* match the rest */
             color: var(--primary-color);
             font-size: 1.5em;
             margin-bottom: 15px;
             padding-bottom: 15px;
             border-bottom: 1px solid var(--secondary-bg);
         }
+
         
         /* Search Container Customization */
         .search-container {
@@ -499,7 +503,37 @@
             <div id="currentTrackInfo"></div>
             <div id="playerContainer" class="player-container"></div>
             <div id="errorMessage" class="error-message"></div>
+<!-- About & Contact Section -->
+<div id="aboutCompact" style="background-color: #1e1e1e; color: #ddd; margin-top: 10px; border-radius: 8px; padding: 10px 15px; font-size: 0.9em;">
+    <details>
+        <summary style="cursor: pointer; color: #1DB954;">About MyMusic & Contact</summary>
+        <div style="margin-top: 10px;">
+            <p><strong>MyMusic</strong> is a web-based music player that helps you export playlists from Spotify (via <a href="https://tunemymusic.com" target="_blank" style="color: #1ed760;">TuneMyMusic</a>), scrape YouTube for matching songs using Python, and enjoy seamless video playback right in your browser.</p>
+            
+            <p>This app was crafted with the help of AI models including <a href="https://claude.ai" target="_blank" style="color: #1ed760;">Claude</a> and ChatGPT. It focuses entirely on YouTube integration (no SoundCloud currently), embedding the best matching videos for each track.</p>
+            
+            <p><strong>How it works:</strong></p>
+            <ul style="margin-left: 20px;">
+                <li>Export your Spotify playlist as a CSV</li>
+                <li>Run a custom Python script to scrape YouTube links</li>
+                <li>Load them into this player for easy video playback</li>
+            </ul>
+
+            <p>Explore the live app: <a href="https://mymusic-793b.onrender.com" target="_blank" style="color: #1ed760;">mymusic-793b.onrender.com</a></p>
+            <p>View source code: <a href="https://github.com/VazeerAhmed/MyMusic" target="_blank" style="color: #1ed760;">GitHub Repository</a></p>
+
+            <hr style="margin: 10px 0; border-color: #333;">
+            <p><strong>Reach Me Out:</strong><br>
+            📧 Email: <a href="mailto:your.email@example.com" style="color: #1ed760;">your.email@example.com</a><br>
+            💬 Telegram: <a href="https://t.me/yourusername" target="_blank" style="color: #1ed760;">@yourusername</a><br>
+            🌐 Portfolio: <a href="https://yourportfolio.com" target="_blank" style="color: #1ed760;">yourportfolio.com</a></p>
         </div>
+    </details>
+</div>
+
+        </div>
+        
+
 
         <div class="right-side-container">
             <!-- Weather container -->
@@ -756,8 +790,10 @@ async function fetchWeather() {
 
         // Update the weather container
         weatherContainer.innerHTML = `
-    <h3>Weather</h3>
     <div class="weather-card">
+        <div style="width: 100%; margin-bottom: 10px;">
+            <h3 style="margin: 0;">Weather</h3>
+        </div>
         <div class="weather-left">
             <div class="temperature">${temp}°C</div>
             <div class="date">${date}</div>
@@ -770,6 +806,7 @@ async function fetchWeather() {
         </div>
     </div>
 `;
+
 
 
     } catch (error) {
