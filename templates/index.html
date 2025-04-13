@@ -49,6 +49,10 @@
             position: sticky;
             top: 0;
         }
+        .hidden {
+            display: none !important;
+        }
+
         
         /* Custom scrollbar for the sidebar */
         .sidebar::-webkit-scrollbar {
@@ -626,18 +630,18 @@ function handleSearch(event) {
     const songItems = document.querySelectorAll('.song-item');
     
     songItems.forEach(item => {
-        const title = item.querySelector('.song-title')?.textContent.toLowerCase() || '';
-        const artist = item.querySelector('.song-artist')?.textContent.toLowerCase() || '';
-        const album = item.getAttribute('data-album')?.toLowerCase() || '';
-
-        if (title.includes(searchTerm) || artist.includes(searchTerm) || album.includes(searchTerm)) {
+        // Corrected selector to account for nested structure
+        const title = item.querySelector('.song-info .song-title').textContent.toLowerCase();
+        const artist = item.querySelector('.song-info .song-artist').textContent.toLowerCase();
+        
+        if (title.includes(searchTerm) || artist.includes(searchTerm)) {
             item.classList.remove('hidden');
         } else {
             item.classList.add('hidden');
         }
     });
 }
-
+        
 function scrollToActiveSong() {
     const activeSong = document.querySelector('.song-item.active');
     const songList = document.getElementById('songList');
