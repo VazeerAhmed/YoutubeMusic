@@ -743,14 +743,20 @@ async function fetchWeather() {
 
         // Update the weather container
         weatherContainer.innerHTML = `
-            <h3>Weather</h3>
-            <p id="weather-info">Temperature: ${temp}°C</p>
-            <p id="snowfall-info">Snowfall: ${snowfall}</p>
-            <p id="rain-chance-info">Chance of Rain: ${rainChance}</p>
-            <p id="time-info">Sunrise: ${sunrise}</p>
-            <p id="time-info">Sunset: ${sunset}</p>
-            <p id="date-info">Date: ${date}</p>
-        `;
+    <h3>Weather</h3>
+    <div class="weather-card">
+        <div class="weather-left">
+            <div class="temperature">${temp}°C</div>
+            <div class="date">${date}</div>
+        </div>
+        <div class="weather-right">
+            <div><strong>Snowfall:</strong> ${snowfall}</div>
+            <div><strong>Rain Chance:</strong> ${rainChance}</div>
+            <div><strong>Sunrise:</strong> ${sunrise}</div>
+            <div><strong>Sunset:</strong> ${sunset}</div>
+        </div>
+    </div>
+`;
 
     } catch (error) {
         console.error('Weather error:', error);
