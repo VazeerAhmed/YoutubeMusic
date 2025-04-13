@@ -15,6 +15,10 @@
             --scrollbar-thumb-color: #1DB954;
             --scrollbar-thumb-hover: #1ed760;
         }
+
+        .hidden {
+            display: none !important;
+        }
         
         * {
             margin: 0;
@@ -178,7 +182,34 @@
             font-size: 1.2rem;
             margin-bottom: 15px;
         }
-        
+        .weather-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--hover-bg);
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .weather-left {
+            text-align: center;
+        }
+        .weather-left .temperature {
+            font-size: 2.5em;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        .weather-left .date {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        .weather-right {
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
         /* Song List Styling */
         .song-list {
             list-style: none;
@@ -319,39 +350,6 @@
         .right-side-container::-webkit-scrollbar-thumb:hover {
             background: var(--scrollbar-thumb-hover);
         }
-
-        .weather-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: var(--hover-bg);
-    border-radius: 12px;
-    padding: 15px 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.weather-left {
-    text-align: center;
-}
-
-.weather-left .temperature {
-    font-size: 2.5em;
-    color: var(--primary-color);
-    font-weight: bold;
-}
-
-.weather-left .date {
-    font-size: 0.9em;
-    color: #aaa;
-}
-
-.weather-right {
-    font-size: 0.95em;
-    line-height: 1.6;
-}
-
         
         #news {
             padding: 20px;
@@ -611,11 +609,14 @@
 function initializeSearch() {
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', handleSearch);
-}
+// Clear the search field initially
+searchInput.value = '';
+        }
 
 function handleSearch(event) {
     const searchTerm = event.target.value.toLowerCase();
     const songItems = document.querySelectorAll('.song-item');
+    let hasResults = false;
     
     songItems.forEach(item => {
         const title = item.querySelector('.song-title').textContent.toLowerCase();
@@ -627,6 +628,18 @@ function handleSearch(event) {
             item.classList.add('hidden');
         }
     });
+
+                // Show a message when no results are found
+                const errorMessage = document.getElementById('errorMessage');
+            if (searchTerm.length > 0 && !hasResults) {
+                errorMessage.textContent = 'No songs match your search.';
+                errorMessage.style.display = 'block';
+            } else {
+                errorMessage.textContent = '';
+                errorMessage.style.display = 'none';
+            }
+        
+
 }
 
 function scrollToActiveSong() {
@@ -757,6 +770,7 @@ async function fetchWeather() {
         </div>
     </div>
 `;
+
 
     } catch (error) {
         console.error('Weather error:', error);
@@ -1248,6 +1262,8 @@ function playPause() {
             .catch(error => {
                 console.error('Error loading songs:', error);
                 document.getElementById('errorMessage').textContent = 'Error loading songs';
+                document.getElementById('errorMessage').style.display = 'block';
+
             });
     }
     window.addEventListener('resize', scrollToActiveSong);
