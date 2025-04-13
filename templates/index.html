@@ -320,7 +320,6 @@
             background: var(--scrollbar-thumb-hover);
         }
         
-        #weather,
         #news {
             padding: 20px;
             background: linear-gradient(to bottom, #333, #444);
@@ -330,7 +329,6 @@
             margin: 15px 0;
         }
         
-        #weather h3,
         #news h3 {
             font-size: 1.5em;
             color: var(--primary-color);
@@ -378,6 +376,34 @@
         .news-item a:hover {
             color: var(--primary-color);
         }
+        .weather-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--hover-bg);
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .weather-left {
+            text-align: center;
+        }
+        .weather-left .temperature {
+            font-size: 2.5em;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        .weather-left .date {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        .weather-right {
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
         
         /* Responsive Adjustments */
         @media (max-width: 768px) {
