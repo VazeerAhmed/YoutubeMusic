@@ -49,10 +49,6 @@
             position: sticky;
             top: 0;
         }
-        .hidden {
-            display: none !important;
-        }
-
         
         /* Custom scrollbar for the sidebar */
         .sidebar::-webkit-scrollbar {
@@ -122,25 +118,6 @@
         .search-button:hover {
             background-color: var(--button-hover);
         }
-
-        .song-album {
-             font-size: 0.85em;
-              color: #ccc;
-        }
-
-
-        /* Error Message Container */
-        
-        .error-message {
-            color: #ff4444;
-            padding: 10px;
-            text-align: center;
-            background-color:  rgba(255, 68, 68, 0.1);
-            border-radius: 4px;
-            margin: 15px 0;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        
         .refresh-btn {
             padding: 8px 12px;
             background-color: var(--primary-color);
@@ -157,7 +134,17 @@
         }
 
 
+        /* Error Message Container */
         
+        .error-message {
+            color: #ff4444;
+            padding: 10px;
+            text-align: center;
+            background-color:  rgba(255, 68, 68, 0.1);
+            border-radius: 4px;
+            margin: 15px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
 
         /* Content */
         .content {
@@ -332,38 +319,7 @@
         .right-side-container::-webkit-scrollbar-thumb:hover {
             background: var(--scrollbar-thumb-hover);
         }
-        .weather-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: var(--hover-bg);
-    border-radius: 12px;
-    padding: 15px 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.weather-left {
-    text-align: center;
-}
-
-.weather-left .temperature {
-    font-size: 2.5em;
-    color: var(--primary-color);
-    font-weight: bold;
-}
-
-.weather-left .date {
-    font-size: 0.9em;
-    color: #aaa;
-}
-
-.weather-right {
-    font-size: 0.95em;
-    line-height: 1.6;
-}
-
+        
         #weather,
         #news {
             padding: 20px;
@@ -630,9 +586,8 @@ function handleSearch(event) {
     const songItems = document.querySelectorAll('.song-item');
     
     songItems.forEach(item => {
-        // Corrected selector to account for nested structure
-        const title = item.querySelector('.song-info .song-title').textContent.toLowerCase();
-        const artist = item.querySelector('.song-info .song-artist').textContent.toLowerCase();
+        const title = item.querySelector('.song-title').textContent.toLowerCase();
+        const artist = item.querySelector('.song-artist').textContent.toLowerCase();
         
         if (title.includes(searchTerm) || artist.includes(searchTerm)) {
             item.classList.remove('hidden');
@@ -641,7 +596,7 @@ function handleSearch(event) {
         }
     });
 }
-        
+
 function scrollToActiveSong() {
     const activeSong = document.querySelector('.song-item.active');
     const songList = document.getElementById('songList');
@@ -755,22 +710,15 @@ async function fetchWeather() {
         const date = new Date().toLocaleDateString('en-GB');
 
         // Update the weather container
-
         weatherContainer.innerHTML = `
-    <h3>Weather</h3>
-    <div class="weather-card">
-        <div class="weather-left">
-            <div class="temperature">${temp}°C</div>
-            <div class="date">${date}</div>
-        </div>
-        <div class="weather-right">
-            <div><strong>Snowfall:</strong> ${snowfall}</div>
-            <div><strong>Rain Chance:</strong> ${rainChance}</div>
-            <div><strong>Sunrise:</strong> ${sunrise}</div>
-            <div><strong>Sunset:</strong> ${sunset}</div>
-        </div>
-    </div>
-`;
+            <h3>Weather</h3>
+            <p id="weather-info">Temperature: ${temp}°C</p>
+            <p id="snowfall-info">Snowfall: ${snowfall}</p>
+            <p id="rain-chance-info">Chance of Rain: ${rainChance}</p>
+            <p id="time-info">Sunrise: ${sunrise}</p>
+            <p id="time-info">Sunset: ${sunset}</p>
+            <p id="date-info">Date: ${date}</p>
+        `;
 
     } catch (error) {
         console.error('Weather error:', error);
@@ -1243,15 +1191,13 @@ function playPause() {
                     if (!song['Track name']) return;
 
                     const li = document.createElement('li');
-                    li.setAttribute('data-album', song['Album'] || '');
+                    li.className = 'song-item';
                     li.innerHTML = `
                         <div class="song-info">
                             <div class="song-title">${song['Track name']}</div>
                             <div class="song-artist">${song['Artist name'] || 'Unknown Artist'}</div>
-                            <div class="song-album">${song['Album'] || 'Unknown Album'}</div>
                         </div>
                     `;
-
 
                     li.addEventListener('click', () => {
                         createPlayer(song, song, index);
